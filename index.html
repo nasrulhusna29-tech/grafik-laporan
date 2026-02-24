@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Puskesmas - Total Tahunan</title>
+    <title>Dashboard Puskesmas - Analisis Gender & Total</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .container { background: white; max-width: 1100px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container { background: white; max-width: 1200px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; align-items: flex-end; }
         .control-group { text-align: left; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 180px; margin-top: 5px; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 180px; margin-top: 5px; cursor: pointer; }
         h2 { color: #2c3e50; margin-bottom: 10px; }
-        .status-msg { font-size: 14px; color: #3498db; margin-bottom: 10px; height: 20px; }
-        .chart-box { position: relative; height: 500px; }
+        .status-msg { font-size: 14px; color: #3498db; margin-bottom: 10px; height: 20px; font-weight: bold; }
+        .chart-box { position: relative; height: 600px; }
     </style>
 </head>
 <body>
@@ -65,30 +65,35 @@
         const loader = document.getElementById('loading');
         rawDataStore = [];
 
+        loader.innerHTML = "Sedang mengambil data...";
+
         if (selection === "TOTAL") {
-            loader.innerHTML = "Sedang menjumlahkan data seluruh bulan (Jan-Des)...";
             let agregasiPoli = {};
 
-            // Loop untuk mengambil semua sheet
             for (let b of daftarBulan) {
                 const dataBulan = await fetchCSV(b);
                 dataBulan.forEach(item => {
-                    if (agregasiPoli[item.nama]) {
-                        agregasiPoli[item.nama] += item.jml;
-                    } else {
-                        agregasiPoli[item.nama] = item.jml;
+                    if (!agregasiPoli[item.nama]) {
+                        agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
                     }
+                    agregasiPoli[item.nama].laki += item.laki;
+                    agregasiPoli[item.nama].peremp += item.peremp;
+                    agregasiPoli[item.nama].total += item.total;
                 });
             }
-            // Ubah objek ke array
+
             for (let poli in agregasiPoli) {
-                rawDataStore.push({ nama: poli, jml: agregasiPoli[poli] });
+                rawDataStore.push({ 
+                    nama: poli, 
+                    laki: agregasiPoli[poli].laki, 
+                    peremp: agregasiPoli[poli].peremp, 
+                    total: agregasiPoli[poli].total 
+                });
             }
             loader.innerHTML = "Berhasil menampilkan Total Tahunan.";
         } else {
-            loader.innerHTML = `Memuat data bulan ${selection}...`;
             rawDataStore = await fetchCSV(selection);
-            loader.innerHTML = "";
+            loader.innerHTML = `Data Bulan ${selection} Berhasil Dimuat.`;
         }
 
         updatePoliDropdown();
@@ -106,18 +111,23 @@
             });
 
             let listData = [];
+            // Mulai dari baris data (index 12 sesuai struktur Anda)
             for (let i = 12; i < rows.length; i++) {
                 const row = rows[i];
-                if (row && row[1] && row[4]) {
+                if (row && row[1]) {
                     const nama = row[1].trim();
-                    const jml = parseInt(row[4]);
-                    if (nama !== "" && !isNaN(jml) && nama !== "NAMA RUANGAN / POLI") {
-                        listData.push({ nama, jml });
+                    const L = parseInt(row[2]) || 0;
+                    const P = parseInt(row[3]) || 0;
+                    const T = parseInt(row[4]) || 0;
+
+                    if (nama !== "" && nama !== "NAMA RUANGAN / POLI" && !nama.includes("TOTAL")) {
+                        listData.push({ nama, laki: L, peremp: P, total: T });
                     }
                 }
             }
             return listData;
         } catch (e) {
+            console.error("Error fetching sheet: " + sheetName, e);
             return [];
         }
     }
@@ -125,11 +135,8 @@
     function updatePoliDropdown() {
         const filterSelect = document.getElementById('filterPoli');
         const currentVal = filterSelect.value;
-        
-        // Simpan daftar poli yang unik
         let poliSet = new Set(rawDataStore.map(d => d.nama));
         
-        // Reset dropdown kecuali opsi pertama
         filterSelect.innerHTML = '<option value="SEMUA">-- Tampilkan Semua Poli --</option>';
         
         Array.from(poliSet).sort().forEach(poli => {
@@ -149,41 +156,66 @@
             filteredData = rawDataStore.filter(d => d.nama === filterValue);
         }
 
-        filteredData.sort((a, b) => b.jml - a.jml);
+        // Urutkan berdasarkan total terbanyak
+        filteredData.sort((a, b) => b.total - a.total);
 
         const labels = filteredData.map(d => d.nama);
-        const values = filteredData.map(d => d.jml);
+        const dataLaki = filteredData.map(d => d.laki);
+        const dataPeremp = filteredData.map(d => d.peremp);
 
-        renderChart(labels, values);
+        renderChart(labels, dataLaki, dataPeremp);
     }
 
-    function renderChart(labels, data) {
+    function renderChart(labels, laki, peremp) {
         const ctx = document.getElementById('myChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
 
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.slice(0, 20),
-                datasets: [{
-                    label: 'Jumlah Kunjungan Pasien',
-                    data: data.slice(0, 20),
-                    backgroundColor: '#3498db',
-                    borderRadius: 5
-                }]
+                labels: labels.slice(0, 25), // Batasi 25 poli teratas agar rapi
+                datasets: [
+                    {
+                        label: 'Laki-laki',
+                        data: laki.slice(0, 25),
+                        backgroundColor: '#3498db',
+                    },
+                    {
+                        label: 'Perempuan',
+                        data: peremp.slice(0, 25),
+                        backgroundColor: '#e74c3c',
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: 'y', // Horizontal agar nama poli terbaca
+                indexAxis: 'y',
+                scales: {
+                    x: { 
+                        stacked: true,
+                        title: { display: true, text: 'Jumlah Pasien' }
+                    },
+                    y: { 
+                        stacked: true 
+                    }
+                },
                 plugins: {
-                    legend: { display: true }
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            footer: (tooltipItems) => {
+                                let sum = 0;
+                                tooltipItems.forEach(i => sum += i.raw);
+                                return 'Total: ' + sum;
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // Inisialisasi awal dengan Total
     loadData();
 </script>
 </body>
