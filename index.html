@@ -2,37 +2,44 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Bulanan Puskesmas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kunjungan Poli Puskesmas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; padding: 20px; text-align: center; }
-        .container { background: white; max-width: 900px; margin: auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        select { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 20px; width: 200px; }
-        h2 { color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: #2c3e50; margin-bottom: 5px; }
+        p { color: #7f8c8d; margin-bottom: 25px; }
+        .controls { margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        select { padding: 10px 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; outline: none; cursor: pointer; }
+        canvas { margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Laporan Kunjungan Pasien Per Poli 2025</h2>
+    <h2>Grafik Kunjungan Pasien Per Poli 2025</h2>
+    <p>Data real-time dari Google Spreadsheet</p>
     
-    <label for="bulan">Pilih Bulan: </label>
-    <select id="bulan" onchange="loadData()">
-        <option value="JAN">Januari</option>
-        <option value="FEB">Februari</option>
-        <option value="MAR">Maret</option>
-        <option value="APR">April</option>
-        <option value="MEI">Mei</option>
-        <option value="JUN">Juni</option>
-        <option value="JUL">Juli</option>
-        <option value="AGS">Agustus</option>
-        <option value="SEP">September</option>
-        <option value="OKT">Oktober</option>
-        <option value="NOV">November</option>
-        <option value="DES">Desember</option>
-    </select>
+    <div class="controls">
+        <label for="bulan">Pilih Bulan: </label>
+        <select id="bulan" onchange="loadData()">
+            <option value="JAN">Januari</option>
+            <option value="FEB">Februari</option>
+            <option value="MAR">Maret</option>
+            <option value="APR">April</option>
+            <option value="MEI">Mei</option>
+            <option value="JUN">Juni</option>
+            <option value="JUL">Juli</option>
+            <option value="AGS">Agustus</option>
+            <option value="SEP">September</option>
+            <option value="OKT">Oktober</option>
+            <option value="NOV">November</option>
+            <option value="DES">Desember</option>
+        </select>
+    </div>
 
-    <canvas id="myChart"></canvas>
+    <canvas id="chartPoli"></canvas>
 </div>
 
 <script>
@@ -42,72 +49,79 @@
         const sheetName = document.getElementById('bulan').value;
         const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
         
-        // PERBAIKAN: Gunakan format gviz/tq untuk mengambil CSV berdasarkan nama sheet
+        // Link CSV khusus untuk mengambil sheet tertentu
         const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
         try {
             const response = await fetch(url);
             const csvText = await response.text();
             
-            // Proses CSV ke Array (Menggunakan regex agar koma di dalam tanda kutip tidak ikut terpecah)
-            const rows = csvText.split('\n').map(row => row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g));
-            
+            // Memproses CSV: Mengatasi koma di dalam tanda kutip (nama poli yang panjang)
+            const rows = csvText.split('\n').map(row => {
+                const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                return matches ? matches.map(m => m.replace(/"/g, "")) : [];
+            });
+
             const labels = [];
-            const dataJumlah = [];
+            const dataValues = [];
 
-            // Baris data mulai dari baris ke-12 (index 11)
-            for (let i = 11; i < rows.length; i++) {
-                if (!rows[i]) continue;
-                
-                let namaPoli = rows[i][1]?.replace(/"/g, "").trim(); 
-                let jumlah = rows[i][4]?.replace(/"/g, "").trim();
+            // Berdasarkan struktur file Anda:
+            // Data mulai di baris 13 (indeks 12), Kolom Nama Poli di indeks 1, Kolom JUMLAH di indeks 4
+            for (let i = 12; i < rows.length; i++) {
+                const row = rows[i];
+                if (row && row[1] && row[4]) {
+                    const namaPoli = row[1].trim();
+                    const jumlah = parseInt(row[4]);
 
-                // Validasi agar hanya mengambil baris yang benar-benar berisi data poli
-                if (namaPoli && !isNaN(jumlah) && namaPoli !== "" && namaPoli !== "NAMA RUANGAN / POLI") {
-                    labels.push(namaPoli);
-                    dataJumlah.push(parseInt(jumlah));
+                    // Pastikan bukan baris total atau kosong
+                    if (namaPoli !== "" && !isNaN(jumlah)) {
+                        labels.push(namaPoli);
+                        dataValues.push(jumlah);
+                    }
                 }
             }
 
-            renderChart(labels, dataJumlah, sheetName);
+            renderChart(labels, dataValues, sheetName);
         } catch (error) {
             console.error("Gagal memuat data:", error);
-            alert("Gagal memuat data. Pastikan Google Sheet sudah di-share ke 'Anyone with the link'!");
+            alert("Terjadi kesalahan saat mengambil data. Pastikan spreadsheet sudah di-Share ke 'Anyone with the link'!");
         }
     }
 
     function renderChart(labels, data, bulan) {
-        const ctx = document.getElementById('myChart').getContext('2d');
+        const ctx = document.getElementById('chartPoli').getContext('2d');
 
         if (chartInstance) {
             chartInstance.destroy();
         }
 
         chartInstance = new Chart(ctx, {
-            type: 'bar',
+            type: 'bar', // Anda bisa ganti ke 'line'
             data: {
-                labels: labels.slice(0, 15), // Menampilkan 15 poli pertama agar tidak terlalu sempit
+                labels: labels.slice(0, 15), // Menampilkan 15 poli pertama agar tidak tumpang tindih
                 datasets: [{
-                    label: `Total Kunjungan Pasien - ${bulan} 2025`,
+                    label: `Jumlah Kunjungan Pasien (${bulan})`,
                     data: data.slice(0, 15),
                     backgroundColor: 'rgba(52, 152, 219, 0.7)',
                     borderColor: 'rgba(41, 128, 185, 1)',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderRadius: 5
                 }]
             },
             options: {
                 responsive: true,
-                indexAxis: 'y', // Mengubah menjadi bar horizontal agar nama Poli lebih mudah dibaca
-                scales: {
-                    x: { beginAtZero: true }
-                },
+                indexAxis: 'y', // Menggunakan grafik horizontal karena nama poli panjang
                 plugins: {
                     legend: { position: 'top' }
+                },
+                scales: {
+                    x: { beginAtZero: true }
                 }
             }
         });
     }
 
+    // Inisialisasi awal
     loadData();
 </script>
 
