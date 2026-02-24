@@ -18,10 +18,10 @@
     <h2>Tren Kunjungan Pasien Per Poli 2025</h2>
     <canvas id="chartPoli"></canvas>
 </div>
-
+<section>
 <script>
     // Link export CSV dari Google Sheets anda
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/export?format=csv';
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=JAN';
 
     async function fetchData() {
         const response = await fetch(sheetUrl);
@@ -47,9 +47,9 @@
     function renderChart(labels, values) {
         const ctx = document.getElementById('chartPoli').getContext('2d');
         new Chart(ctx, {
-            type: 'bar', // Anda boleh tukar ke 'line' atau 'pie'
+            type: 'bar',
             data: {
-                labels: labels.slice(0, 10), // Menampilkan 10 poli teratas
+                labels: labels.slice(0, 10),
                 datasets: [{
                     label: 'Jumlah Kunjungan',
                     data: values.slice(0, 10),
@@ -72,6 +72,61 @@
 
     fetchData();
 </script>
+</section>
+    <section>
+        <script>
+    // Link export CSV dari Google Sheets anda
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=FEB';
 
+    async function fetchData() {
+        const response = await fetch(sheetUrl);
+        const data = await response.text();
+        
+        // Memecah baris CSV
+        const rows = data.split('\n').slice(12); // Melewati header metadata (baris 1-11)
+        
+        const labels = [];
+        const values = [];
+
+        rows.forEach(row => {
+            const cols = row.split(',');
+            if (cols[1] && cols[4]) { // Kolom 1: Nama Poli, Kolom 4: Jumlah
+                labels.push(cols[1]);
+                values.push(parseInt(cols[4]));
+            }
+        });
+
+        renderChart(labels, values);
+    }
+
+    function renderChart(labels, values) {
+        const ctx = document.getElementById('chartPoli').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels.slice(0, 10),
+                datasets: [{
+                    label: 'Jumlah Kunjungan',
+                    data: values.slice(0, 10),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: true, position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    fetchData();
+</script>
+    </section>    
 </body>
 </html>
