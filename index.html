@@ -20,14 +20,12 @@
 </div>
 <section>
 <script>
-    // Link export CSV dari Google Sheets anda
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=JAN';
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=JAN';
 
     async function fetchData() {
         const response = await fetch(sheetUrl);
         const data = await response.text();
         
-        // Memecah baris CSV
         const rows = data.split('\n').slice(12); // Melewati header metadata (baris 1-11)
         
         const labels = [];
@@ -35,7 +33,7 @@
 
         rows.forEach(row => {
             const cols = row.split(',');
-            if (cols[1] && cols[4]) { // Kolom 1: Nama Poli, Kolom 4: Jumlah
+            if (cols[1] && cols[4]) { 
                 labels.push(cols[1]);
                 values.push(parseInt(cols[4]));
             }
@@ -72,9 +70,8 @@
 
     fetchData();
 </script>
-</section>
-    <section>
-        <script>
+
+    <script>
     // Link export CSV dari Google Sheets anda
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=FEB';
 
