@@ -41,26 +41,29 @@
     async function loadData() {
         const sheetName = document.getElementById('bulan').value;
         const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
-        // Link khusus untuk mengambil data berdasarkan nama sheet
-        const url = `https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/edit?usp=sharing&ouid=113388454473635749406&rtpof=true&sd=true`;
+        
+        // PERBAIKAN: Gunakan format gviz/tq untuk mengambil CSV berdasarkan nama sheet
+        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
         try {
             const response = await fetch(url);
             const csvText = await response.text();
             
-            // Proses CSV ke Array
-            const rows = csvText.split('\n').map(row => row.split(','));
+            // Proses CSV ke Array (Menggunakan regex agar koma di dalam tanda kutip tidak ikut terpecah)
+            const rows = csvText.split('\n').map(row => row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g));
             
             const labels = [];
             const dataJumlah = [];
 
-            // Berdasarkan data anda, baris data mulai dari baris ke-12 (index 11)
-            // Kolom Poli di index 1, Kolom Jumlah di index 4
+            // Baris data mulai dari baris ke-12 (index 11)
             for (let i = 11; i < rows.length; i++) {
-                let namaPoli = rows[i][1]?.replace(/"/g, ""); // Hapus tanda kutip
-                let jumlah = rows[i][4]?.replace(/"/g, "");
+                if (!rows[i]) continue;
+                
+                let namaPoli = rows[i][1]?.replace(/"/g, "").trim(); 
+                let jumlah = rows[i][4]?.replace(/"/g, "").trim();
 
-                if (namaPoli && !isNaN(jumlah) && namaPoli !== "") {
+                // Validasi agar hanya mengambil baris yang benar-benar berisi data poli
+                if (namaPoli && !isNaN(jumlah) && namaPoli !== "" && namaPoli !== "NAMA RUANGAN / POLI") {
                     labels.push(namaPoli);
                     dataJumlah.push(parseInt(jumlah));
                 }
@@ -69,13 +72,13 @@
             renderChart(labels, dataJumlah, sheetName);
         } catch (error) {
             console.error("Gagal memuat data:", error);
+            alert("Gagal memuat data. Pastikan Google Sheet sudah di-share ke 'Anyone with the link'!");
         }
     }
 
     function renderChart(labels, data, bulan) {
         const ctx = document.getElementById('myChart').getContext('2d');
 
-        // Hapus chart lama jika ganti bulan
         if (chartInstance) {
             chartInstance.destroy();
         }
@@ -83,25 +86,28 @@
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.slice(0, 10), // Tampilkan 10 poli teratas
+                labels: labels.slice(0, 15), // Menampilkan 15 poli pertama agar tidak terlalu sempit
                 datasets: [{
-                    label: `Jumlah Pasien - ${bulan}`,
-                    data: data.slice(0, 10),
-                    backgroundColor: '#3498db',
-                    borderColor: '#2980b9',
+                    label: `Total Kunjungan Pasien - ${bulan} 2025`,
+                    data: data.slice(0, 15),
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(41, 128, 185, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
+                indexAxis: 'y', // Mengubah menjadi bar horizontal agar nama Poli lebih mudah dibaca
                 scales: {
-                    y: { beginAtZero: true }
+                    x: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { position: 'top' }
                 }
             }
         });
     }
 
-    // Jalankan pertama kali saat halaman dibuka
     loadData();
 </script>
 
