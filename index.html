@@ -1,58 +1,94 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Kunjungan Poli 2025</title>
+    <title>Dashboard Bulanan Puskesmas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        canvas { width: 100% !important; height: auto !important; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; padding: 20px; text-align: center; }
+        .container { background: white; max-width: 900px; margin: auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        select { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 20px; width: 200px; }
+        h2 { color: #333; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Tren Kunjungan Pasien Per Poli 2025</h2>
-    <canvas id="chartPoli"></canvas>
+    <h2>Laporan Kunjungan Pasien Per Poli 2025</h2>
+    
+    <label for="bulan">Pilih Bulan: </label>
+    <select id="bulan" onchange="loadData()">
+        <option value="JAN">Januari</option>
+        <option value="FEB">Februari</option>
+        <option value="MAR">Maret</option>
+        <option value="APR">April</option>
+        <option value="MEI">Mei</option>
+        <option value="JUN">Juni</option>
+        <option value="JUL">Juli</option>
+        <option value="AGS">Agustus</option>
+        <option value="SEP">September</option>
+        <option value="OKT">Oktober</option>
+        <option value="NOV">November</option>
+        <option value="DES">Desember</option>
+    </select>
+
+    <canvas id="myChart"></canvas>
 </div>
-<section>
+
 <script>
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=JAN';
+    let chartInstance = null;
 
-    async function fetchData() {
-        const response = await fetch(sheetUrl);
-        const data = await response.text();
-        
-        const rows = data.split('\n').slice(12); // Melewati header metadata (baris 1-11)
-        
-        const labels = [];
-        const values = [];
+    async function loadData() {
+        const sheetName = document.getElementById('bulan').value;
+        const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
+        // Link khusus untuk mengambil data berdasarkan nama sheet
+        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-        rows.forEach(row => {
-            const cols = row.split(',');
-            if (cols[1] && cols[4]) { 
-                labels.push(cols[1]);
-                values.push(parseInt(cols[4]));
+        try {
+            const response = await fetch(url);
+            const csvText = await response.text();
+            
+            // Proses CSV ke Array
+            const rows = csvText.split('\n').map(row => row.split(','));
+            
+            const labels = [];
+            const dataJumlah = [];
+
+            // Berdasarkan data anda, baris data mulai dari baris ke-12 (index 11)
+            // Kolom Poli di index 1, Kolom Jumlah di index 4
+            for (let i = 11; i < rows.length; i++) {
+                let namaPoli = rows[i][1]?.replace(/"/g, ""); // Hapus tanda kutip
+                let jumlah = rows[i][4]?.replace(/"/g, "");
+
+                if (namaPoli && !isNaN(jumlah) && namaPoli !== "") {
+                    labels.push(namaPoli);
+                    dataJumlah.push(parseInt(jumlah));
+                }
             }
-        });
 
-        renderChart(labels, values);
+            renderChart(labels, dataJumlah, sheetName);
+        } catch (error) {
+            console.error("Gagal memuat data:", error);
+        }
     }
 
-    function renderChart(labels, values) {
-        const ctx = document.getElementById('chartPoli').getContext('2d');
-        new Chart(ctx, {
+    function renderChart(labels, data, bulan) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Hapus chart lama jika ganti bulan
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.slice(0, 10),
+                labels: labels.slice(0, 10), // Tampilkan 10 poli teratas
                 datasets: [{
-                    label: 'Jumlah Kunjungan',
-                    data: values.slice(0, 10),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    label: `Jumlah Pasien - ${bulan}`,
+                    data: data.slice(0, 10),
+                    backgroundColor: '#3498db',
+                    borderColor: '#2980b9',
                     borderWidth: 1
                 }]
             },
@@ -60,71 +96,14 @@
                 responsive: true,
                 scales: {
                     y: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: true, position: 'bottom' }
                 }
             }
         });
     }
 
-    fetchData();
+    // Jalankan pertama kali saat halaman dibuka
+    loadData();
 </script>
-</section>
-    <section>
-    <script>
-    // Link export CSV dari Google Sheets anda
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/gviz/tq?tqx=out:csv&sheet=FEB';
 
-    async function fetchData() {
-        const response = await fetch(sheetUrl);
-        const data = await response.text();
-        
-        // Memecah baris CSV
-        const rows = data.split('\n').slice(12); // Melewati header metadata (baris 1-11)
-        
-        const labels = [];
-        const values = [];
-
-        rows.forEach(row => {
-            const cols = row.split(',');
-            if (cols[1] && cols[4]) { // Kolom 1: Nama Poli, Kolom 4: Jumlah
-                labels.push(cols[1]);
-                values.push(parseInt(cols[4]));
-            }
-        });
-
-        renderChart(labels, values);
-    }
-
-    function renderChart(labels, values) {
-        const ctx = document.getElementById('chartPoli').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels.slice(0, 10),
-                datasets: [{
-                    label: 'Jumlah Kunjungan',
-                    data: values.slice(0, 10),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: true, position: 'bottom' }
-                }
-            }
-        });
-    }
-
-    fetchData();
-</script>
-    </section>    
 </body>
 </html>
