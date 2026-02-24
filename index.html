@@ -18,24 +18,17 @@
             margin: 0; padding: 0; color: #333;
         }
 
-        /* HEADER */
         header {
-            background: white;
-            border-bottom: 4px solid var(--primary-color);
-            padding: 20px 50px;
-            text-align: left;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: white; border-bottom: 4px solid var(--primary-color);
+            padding: 20px 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .header-logo h1 { margin: 0; font-size: 1.5rem; color: var(--dark-color); }
         .header-logo p { margin: 0; font-size: 0.9rem; color: #6c757d; }
 
         .main-content { padding: 40px 20px; max-width: 1200px; margin: auto; }
 
-        /* DASHBOARD CARD */
         .dashboard-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
+            background: white; padding: 30px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
@@ -48,64 +41,45 @@
         .control-group label { font-weight: 600; font-size: 0.9rem; color: var(--dark-color); }
         select { 
             padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); 
-            min-width: 220px; margin-top: 5px; outline: none; transition: 0.3s;
+            min-width: 220px; margin-top: 5px; outline: none;
         }
-        select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
 
-        .chart-box { height: 450px; margin-bottom: 50px; }
+        .chart-box { height: 400px; margin-bottom: 50px; }
 
-        /* TABEL RAPIH */
+        /* TABEL SIK TERURUT */
         .table-container { 
-            margin-top: 30px; 
-            border-radius: 12px; 
-            overflow: hidden; 
+            margin-top: 30px; border-radius: 12px; overflow: hidden; 
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
         table { width: 100%; border-collapse: collapse; background: white; }
         
         thead th { 
-            background-color: #f1f3f5; 
-            color: var(--dark-color); 
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            padding: 15px;
-            border-bottom: 2px solid var(--border-color);
+            background-color: #f8f9fa; color: var(--dark-color); 
+            font-weight: 700; text-transform: uppercase; font-size: 0.75rem;
+            padding: 15px; border-bottom: 2px solid var(--border-color);
+            cursor: pointer; position: relative; transition: 0.2s;
+            user-select: none;
         }
 
-        tbody td { 
-            padding: 14px 15px; 
-            border-bottom: 1px solid #edf2f7; 
-            font-size: 0.95rem;
-            color: #4a5568;
-        }
+        thead th:hover { background-color: #e9ecef; color: var(--primary-color); }
 
-        tbody tr:last-child td { border-bottom: none; }
+        /* Icon Sort */
+        thead th::after { content: ' ↕'; opacity: 0.3; font-size: 0.8rem; }
+        thead th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--primary-color); }
+        thead th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--primary-color); }
 
-        /* Zebra Striping & Hover */
+        tbody td { padding: 14px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; }
         tbody tr:nth-child(even) { background-color: #fafafa; }
-        tbody tr:hover { background-color: #f1f7ff; transition: 0.2s; }
+        tbody tr:hover { background-color: #f1f7ff; }
 
         .text-left { text-align: left; padding-left: 25px; }
-        .badge-total { 
-            background: #ebf4ff; color: var(--primary-color); 
-            padding: 4px 10px; border-radius: 6px; font-weight: 700; 
-        }
+        .badge-total { background: #ebf4ff; color: var(--primary-color); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
 
-        /* FOOTER TABEL */
         tfoot tr { background-color: var(--dark-color) !important; color: white; }
-        tfoot td { padding: 15px; font-weight: 700; font-size: 1rem; }
+        tfoot td { padding: 15px; font-weight: 700; }
 
-        /* FOOTER WEBSITE */
-        footer {
-            background: var(--dark-color); color: white;
-            padding: 50px 20px 20px; margin-top: 60px;
-        }
-        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; max-width: 1200px; margin: auto; }
-        .footer-bottom { text-align: center; margin-top: 40px; border-top: 1px solid #444; padding-top: 20px; font-size: 0.8rem; opacity: 0.6; }
+        footer { background: var(--dark-color); color: white; padding: 40px 20px; margin-top: 60px; text-align: center; }
     </style>
 </head>
 <body>
@@ -113,15 +87,15 @@
 <header>
     <div class="header-logo">
         <h1>Puskesmas Kecamatan Cilincing</h1>
-        <p>Sistem Informasi Data Kunjungan Pasien Online</p>
+        <p>Dashboard Monitoring Kunjungan Pasien</p>
     </div>
 </header>
 
 <div class="main-content">
     <div class="dashboard-card">
-        <h2 style="text-align:center; margin-bottom: 30px;">Statistik Kunjungan Unit Pelayanan</h2>
+        <h2 style="text-align:center; margin-bottom: 30px;">Statistik Unit Pelayanan</h2>
         
-        <div id="loading" style="color: var(--primary-color); font-weight: bold; margin-bottom: 10px;"></div>
+        <div id="loading" style="text-align:center; color: var(--primary-color); font-weight: bold;"></div>
 
         <div class="controls">
             <div class="control-group">
@@ -149,14 +123,14 @@
         </div>
 
         <div class="table-container">
-            <table>
+            <table id="mainTable">
                 <thead>
                     <tr>
-                        <th width="50">No</th>
-                        <th class="text-left">Unit Pelayanan (Poli)</th>
-                        <th>Laki-laki (L)</th>
-                        <th>Perempuan (P)</th>
-                        <th>Total Pasien</th>
+                        <th onclick="sortData('no')">No</th>
+                        <th class="text-left" onclick="sortData('nama')">Unit Pelayanan</th>
+                        <th onclick="sortData('laki')">Laki-laki (L)</th>
+                        <th onclick="sortData('peremp')">Perempuan (P)</th>
+                        <th onclick="sortData('total')">Total Pasien</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -168,25 +142,14 @@
     </div>
 </div>
 
-<footer>
-    <div class="footer-grid">
-        <div>
-            <h4 style="border-bottom: 2px solid var(--primary-color); display: inline-block;">Lokasi Kami</h4>
-            <p>Jl. Madya Kebantenan No.45, Semper Timur, Cilincing, Jakarta Utara.</p>
-        </div>
-        <div>
-            <h4 style="border-bottom: 2px solid var(--primary-color); display: inline-block;">Kontak Darurat</h4>
-            <p>Telp: (021) 4401268<br>Email: pkmcilincing@jakarta.go.id</p>
-        </div>
-    </div>
-    <div class="footer-bottom">&copy; 2026 Puskesmas Cilincing - Jakarta Utara</div>
-</footer>
+<footer>&copy; 2026 Puskesmas Cilincing - Jakarta Utara</footer>
 
 <script>
-    // Script logika tetap sama (loadData, fetchCSV, applyFilter)
-    // Hanya renderTable yang kita sesuaikan styling class-nya
     let chartInstance = null;
-    let rawDataStore = [];
+    let rawDataStore = []; // Data asli dari CSV
+    let currentProcessedData = []; // Data yang sedang ditampilkan (setelah filter/sort)
+    let sortConfig = { key: 'total', direction: 'desc' };
+
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const daftarBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
 
@@ -194,7 +157,7 @@
         const selection = document.getElementById('bulan').value;
         const loader = document.getElementById('loading');
         rawDataStore = [];
-        loader.innerHTML = "Sedang sinkronisasi data...";
+        loader.innerHTML = "Mengsinkronkan data...";
 
         if (selection === "TOTAL") {
             let agregasiPoli = {};
@@ -210,11 +173,10 @@
             for (let poli in agregasiPoli) {
                 rawDataStore.push({ nama: poli, ...agregasiPoli[poli] });
             }
-            loader.innerHTML = "";
         } else {
             rawDataStore = await fetchCSV(selection);
-            loader.innerHTML = "";
         }
+        loader.innerHTML = "";
         updatePoliDropdown();
         applyFilter();
     }
@@ -233,10 +195,14 @@
                 const row = rows[i];
                 if (row && row[1]) {
                     const nama = row[1].trim();
-                    const L = parseInt(row[2]) || 0;
-                    const P = parseInt(row[3]) || 0;
-                    const T = parseInt(row[4]) || 0;
-                    if (nama !== "" && !nama.includes("TOTAL")) listData.push({ nama, laki: L, peremp: P, total: T });
+                    if (nama !== "" && !nama.includes("TOTAL") && nama !== "NAMA RUANGAN / POLI") {
+                        listData.push({ 
+                            nama: nama, 
+                            laki: parseInt(row[2]) || 0, 
+                            peremp: parseInt(row[3]) || 0, 
+                            total: parseInt(row[4]) || 0 
+                        });
+                    }
                 }
             }
             return listData;
@@ -245,23 +211,61 @@
 
     function updatePoliDropdown() {
         const filterSelect = document.getElementById('filterPoli');
-        const currentVal = filterSelect.value;
         let poliSet = new Set(rawDataStore.map(d => d.nama));
         filterSelect.innerHTML = '<option value="SEMUA">Semua Unit Pelayanan</option>';
         Array.from(poliSet).sort().forEach(poli => {
             const opt = document.createElement('option');
             opt.value = poli; opt.innerHTML = poli;
-            if (poli === currentVal) opt.selected = true;
             filterSelect.appendChild(opt);
         });
     }
 
     function applyFilter() {
         const filterValue = document.getElementById('filterPoli').value;
-        let data = (filterValue === "SEMUA") ? [...rawDataStore] : rawDataStore.filter(d => d.nama === filterValue);
-        data.sort((a, b) => b.total - a.total);
-        renderChart(data);
-        renderTable(data);
+        currentProcessedData = (filterValue === "SEMUA") 
+            ? [...rawDataStore] 
+            : rawDataStore.filter(d => d.nama === filterValue);
+        
+        // Selalu urutkan ulang setelah ganti filter berdasarkan config terakhir
+        executeSort();
+    }
+
+    // FUNGSI PENGURUTAN (SORT)
+    function sortData(key) {
+        if (sortConfig.key === key) {
+            sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortConfig.key = key;
+            sortConfig.direction = 'desc'; // Default klik kolom baru = terbesar
+        }
+        
+        // Update tampilan header
+        document.querySelectorAll('th').forEach(th => th.className = th.classList.contains('text-left') ? 'text-left' : '');
+        const headers = document.querySelectorAll('th');
+        const indexMap = { no:0, nama:1, laki:2, peremp:3, total:4 };
+        headers[indexMap[key]].classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
+        executeSort();
+    }
+
+    function executeSort() {
+        currentProcessedData.sort((a, b) => {
+            let valA = a[sortConfig.key];
+            let valB = b[sortConfig.key];
+
+            if (sortConfig.key === 'no') return 0; // No tidak diurutkan secara data, tapi secara tampilan
+
+            if (typeof valA === 'string') {
+                return sortConfig.direction === 'asc' 
+                    ? valA.localeCompare(valB) 
+                    : valB.localeCompare(valA);
+            } else {
+                return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+            }
+        });
+
+        renderChart(currentProcessedData);
+        renderTable(currentProcessedData);
     }
 
     function renderChart(data) {
