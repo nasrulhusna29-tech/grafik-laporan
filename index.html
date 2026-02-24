@@ -66,4 +66,85 @@
             // Parsing CSV
             const rows = csvText.split('\n').map(row => {
                 const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                return
+                return matches ? matches.map(m => m.replace(/"/g, "")) : [];
+            });
+
+            rawDataStore = [];
+            const poliSet = new Set();
+
+            // Ambil data mulai baris ke-12
+            for (let i = 12; i < rows.length; i++) {
+                const row = rows[i];
+                if (row && row[1] && row[4]) {
+                    const nama = row[1].trim();
+                    const jml = parseInt(row[4]);
+                    if (nama !== "" && !isNaN(jml) && nama !== "NAMA RUANGAN / POLI") {
+                        rawDataStore.push({ nama, jml });
+                        poliSet.add(nama);
+                    }
+                }
+            }
+
+            // Update Dropdown Poli secara dinamis jika masih kosong
+            const filterSelect = document.getElementById('filterPoli');
+            if (filterSelect.options.length <= 1) {
+                Array.from(poliSet).sort().forEach(poli => {
+                    const opt = document.createElement('option');
+                    opt.value = poli;
+                    opt.innerHTML = poli;
+                    filterSelect.appendChild(opt);
+                });
+            }
+
+            applyFilter();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function applyFilter() {
+        const filterValue = document.getElementById('filterPoli').value;
+        let filteredData = rawDataStore;
+
+        if (filterValue !== "SEMUA") {
+            filteredData = rawDataStore.filter(d => d.nama === filterValue);
+        }
+
+        // Urutkan berdasarkan jumlah terbesar
+        filteredData.sort((a, b) => b.jml - a.jml);
+
+        const labels = filteredData.map(d => d.nama);
+        const values = filteredData.map(d => d.jml);
+
+        renderChart(labels, values);
+    }
+
+    function renderChart(labels, data) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: filterPoli.value === "SEMUA" ? 'bar' : 'pie', // Jika satu poli tampilkan Pie/Bar tunggal
+            data: {
+                labels: labels.slice(0, 15),
+                datasets: [{
+                    label: 'Jumlah Kunjungan',
+                    data: data.slice(0, 15),
+                    backgroundColor: [
+                        '#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: filterPoli.value === "SEMUA" ? { y: { beginAtZero: true } } : { y: { display: false } }
+            }
+        });
+    }
+
+    loadData();
+</script>
+</body>
+</html>
