@@ -1,2 +1,77 @@
-# grafik-laporan
-data-data puskesmas cilincing
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kunjungan Poli 2025</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        canvas { width: 100% !important; height: auto !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tren Kunjungan Pasien Per Poli 2025</h2>
+    <canvas id="chartPoli"></canvas>
+</div>
+
+<script>
+    // Link export CSV dari Google Sheets anda
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l/export?format=csv';
+
+    async function fetchData() {
+        const response = await fetch(sheetUrl);
+        const data = await response.text();
+        
+        // Memecah baris CSV
+        const rows = data.split('\n').slice(12); // Melewati header metadata (baris 1-11)
+        
+        const labels = [];
+        const values = [];
+
+        rows.forEach(row => {
+            const cols = row.split(',');
+            if (cols[1] && cols[4]) { // Kolom 1: Nama Poli, Kolom 4: Jumlah
+                labels.push(cols[1]);
+                values.push(parseInt(cols[4]));
+            }
+        });
+
+        renderChart(labels, values);
+    }
+
+    function renderChart(labels, values) {
+        const ctx = document.getElementById('chartPoli').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar', // Anda boleh tukar ke 'line' atau 'pie'
+            data: {
+                labels: labels.slice(0, 10), // Menampilkan 10 poli teratas
+                datasets: [{
+                    label: 'Jumlah Kunjungan',
+                    data: values.slice(0, 10),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: true, position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    fetchData();
+</script>
+
+</body>
+</html>
