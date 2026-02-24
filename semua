@@ -2,30 +2,26 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Puskesmas - Total Tahunan</title>
+    <title>Dashboard Puskesmas - Filter Poli</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .container { background: white; max-width: 1100px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; align-items: flex-end; }
-        .control-group { text-align: left; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 180px; margin-top: 5px; }
-        h2 { color: #2c3e50; margin-bottom: 10px; }
-        .status-msg { font-size: 14px; color: #3498db; margin-bottom: 10px; height: 20px; }
-        .chart-box { position: relative; height: 500px; }
+        .container { background: white; max-width: 1000px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 200px; }
+        h2 { color: #2c3e50; }
+        .chart-box { position: relative; height: 400px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>Analisis Kunjungan Pasien Puskesmas 2025</h2>
-    <div id="loading" class="status-msg"></div>
     
     <div class="controls">
-        <div class="control-group">
-            <label>Pilih Periode Waktu:</label><br>
+        <div>
+            <label>Pilih Bulan: </label><br>
             <select id="bulan" onchange="loadData()">
-                <option value="TOTAL">-- TOTAL SEMUA BULAN --</option>
                 <option value="JAN">Januari</option>
                 <option value="FEB">Februari</option>
                 <option value="MAR">Maret</option>
@@ -41,8 +37,8 @@
             </select>
         </div>
 
-        <div class="control-group">
-            <label>Filter Nama Poli:</label><br>
+        <div>
+            <label>Filter Nama Poli: </label><br>
             <select id="filterPoli" onchange="applyFilter()">
                 <option value="SEMUA">-- Tampilkan Semua Poli --</option>
             </select>
@@ -56,99 +52,65 @@
 
 <script>
     let chartInstance = null;
-    let rawDataStore = [];
-    const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
-    const daftarBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
+    let rawDataStore = []; // Untuk menyimpan data asli agar filter cepat
 
     async function loadData() {
-        const selection = document.getElementById('bulan').value;
-        const loader = document.getElementById('loading');
-        rawDataStore = [];
-
-        if (selection === "TOTAL") {
-            loader.innerHTML = "Sedang menjumlahkan data seluruh bulan (Jan-Des)...";
-            let agregasiPoli = {};
-
-            // Loop untuk mengambil semua sheet
-            for (let b of daftarBulan) {
-                const dataBulan = await fetchCSV(b);
-                dataBulan.forEach(item => {
-                    if (agregasiPoli[item.nama]) {
-                        agregasiPoli[item.nama] += item.jml;
-                    } else {
-                        agregasiPoli[item.nama] = item.jml;
-                    }
-                });
-            }
-            // Ubah objek ke array
-            for (let poli in agregasiPoli) {
-                rawDataStore.push({ nama: poli, jml: agregasiPoli[poli] });
-            }
-            loader.innerHTML = "Berhasil menampilkan Total Tahunan.";
-        } else {
-            loader.innerHTML = `Memuat data bulan ${selection}...`;
-            rawDataStore = await fetchCSV(selection);
-            loader.innerHTML = "";
-        }
-
-        updatePoliDropdown();
-        applyFilter();
-    }
-
-    async function fetchCSV(sheetName) {
+        const sheetName = document.getElementById('bulan').value;
+        const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
         const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+
         try {
             const response = await fetch(url);
             const csvText = await response.text();
+            
+            // Parsing CSV
             const rows = csvText.split('\n').map(row => {
                 const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
                 return matches ? matches.map(m => m.replace(/"/g, "")) : [];
             });
 
-            let listData = [];
+            rawDataStore = [];
+            const poliSet = new Set();
+
+            // Ambil data mulai baris ke-12
             for (let i = 12; i < rows.length; i++) {
                 const row = rows[i];
                 if (row && row[1] && row[4]) {
                     const nama = row[1].trim();
                     const jml = parseInt(row[4]);
                     if (nama !== "" && !isNaN(jml) && nama !== "NAMA RUANGAN / POLI") {
-                        listData.push({ nama, jml });
+                        rawDataStore.push({ nama, jml });
+                        poliSet.add(nama);
                     }
                 }
             }
-            return listData;
-        } catch (e) {
-            return [];
-        }
-    }
 
-    function updatePoliDropdown() {
-        const filterSelect = document.getElementById('filterPoli');
-        const currentVal = filterSelect.value;
-        
-        // Simpan daftar poli yang unik
-        let poliSet = new Set(rawDataStore.map(d => d.nama));
-        
-        // Reset dropdown kecuali opsi pertama
-        filterSelect.innerHTML = '<option value="SEMUA">-- Tampilkan Semua Poli --</option>';
-        
-        Array.from(poliSet).sort().forEach(poli => {
-            const opt = document.createElement('option');
-            opt.value = poli;
-            opt.innerHTML = poli;
-            if (poli === currentVal) opt.selected = true;
-            filterSelect.appendChild(opt);
-        });
+            // Update Dropdown Poli secara dinamis jika masih kosong
+            const filterSelect = document.getElementById('filterPoli');
+            if (filterSelect.options.length <= 1) {
+                Array.from(poliSet).sort().forEach(poli => {
+                    const opt = document.createElement('option');
+                    opt.value = poli;
+                    opt.innerHTML = poli;
+                    filterSelect.appendChild(opt);
+                });
+            }
+
+            applyFilter();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     function applyFilter() {
         const filterValue = document.getElementById('filterPoli').value;
-        let filteredData = [...rawDataStore];
+        let filteredData = rawDataStore;
 
         if (filterValue !== "SEMUA") {
             filteredData = rawDataStore.filter(d => d.nama === filterValue);
         }
 
+        // Urutkan berdasarkan jumlah terbesar
         filteredData.sort((a, b) => b.jml - a.jml);
 
         const labels = filteredData.map(d => d.nama);
@@ -162,28 +124,26 @@
         if (chartInstance) chartInstance.destroy();
 
         chartInstance = new Chart(ctx, {
-            type: 'bar',
+            type: filterPoli.value === "SEMUA" ? 'bar' : 'pie', // Jika satu poli tampilkan Pie/Bar tunggal
             data: {
-                labels: labels.slice(0, 20),
+                labels: labels.slice(0, 15),
                 datasets: [{
-                    label: 'Jumlah Kunjungan Pasien',
-                    data: data.slice(0, 20),
-                    backgroundColor: '#3498db',
-                    borderRadius: 5
+                    label: 'Jumlah Kunjungan',
+                    data: data.slice(0, 15),
+                    backgroundColor: [
+                        '#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'
+                    ],
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: 'y', // Horizontal agar nama poli terbaca
-                plugins: {
-                    legend: { display: true }
-                }
+                scales: filterPoli.value === "SEMUA" ? { y: { beginAtZero: true } } : { y: { display: false } }
             }
         });
     }
 
-    // Inisialisasi awal dengan Total
     loadData();
 </script>
 </body>
