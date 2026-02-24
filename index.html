@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Puskesmas - Analisis Gender & Total</title>
+    <title>Dashboard Puskesmas - Grafik & Tabel</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
@@ -12,7 +12,20 @@
         select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 180px; margin-top: 5px; cursor: pointer; }
         h2 { color: #2c3e50; margin-bottom: 10px; }
         .status-msg { font-size: 14px; color: #3498db; margin-bottom: 10px; height: 20px; font-weight: bold; }
-        .chart-box { position: relative; height: 600px; }
+        
+        /* Styling Grafik */
+        .chart-box { position: relative; height: 500px; margin-bottom: 40px; }
+
+        /* Styling Tabel */
+        .table-container { margin-top: 20px; overflow-x: auto; border-radius: 10px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+        th { background-color: #2c3e50; color: white; padding: 12px; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .text-left { text-align: left; padding-left: 20px; }
+        .bold { font-weight: bold; }
+        .total-row { background-color: #ecf0f1 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,6 +65,26 @@
     <div class="chart-box">
         <canvas id="myChart"></canvas>
     </div>
+
+    <div class="table-container">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Ruangan / Poli</th>
+                    <th>Laki-laki (L)</th>
+                    <th>Perempuan (P)</th>
+                    <th>Total (L+P)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+            <tfoot>
+                <tr id="tableFooter" class="total-row">
+                    </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -69,7 +102,6 @@
 
         if (selection === "TOTAL") {
             let agregasiPoli = {};
-
             for (let b of daftarBulan) {
                 const dataBulan = await fetchCSV(b);
                 dataBulan.forEach(item => {
@@ -81,7 +113,6 @@
                     agregasiPoli[item.nama].total += item.total;
                 });
             }
-
             for (let poli in agregasiPoli) {
                 rawDataStore.push({ 
                     nama: poli, 
@@ -111,7 +142,6 @@
             });
 
             let listData = [];
-            // Mulai dari baris data (index 12 sesuai struktur Anda)
             for (let i = 12; i < rows.length; i++) {
                 const row = rows[i];
                 if (row && row[1]) {
@@ -127,7 +157,6 @@
             }
             return listData;
         } catch (e) {
-            console.error("Error fetching sheet: " + sheetName, e);
             return [];
         }
     }
@@ -136,13 +165,10 @@
         const filterSelect = document.getElementById('filterPoli');
         const currentVal = filterSelect.value;
         let poliSet = new Set(rawDataStore.map(d => d.nama));
-        
         filterSelect.innerHTML = '<option value="SEMUA">-- Tampilkan Semua Poli --</option>';
-        
         Array.from(poliSet).sort().forEach(poli => {
             const opt = document.createElement('option');
-            opt.value = poli;
-            opt.innerHTML = poli;
+            opt.value = poli; opt.innerHTML = poli;
             if (poli === currentVal) opt.selected = true;
             filterSelect.appendChild(opt);
         });
@@ -156,64 +182,65 @@
             filteredData = rawDataStore.filter(d => d.nama === filterValue);
         }
 
-        // Urutkan berdasarkan total terbanyak
         filteredData.sort((a, b) => b.total - a.total);
 
-        const labels = filteredData.map(d => d.nama);
-        const dataLaki = filteredData.map(d => d.laki);
-        const dataPeremp = filteredData.map(d => d.peremp);
-
-        renderChart(labels, dataLaki, dataPeremp);
+        renderChart(filteredData);
+        renderTable(filteredData);
     }
 
-    function renderChart(labels, laki, peremp) {
+    function renderChart(data) {
         const ctx = document.getElementById('myChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
+
+        const displayData = data.slice(0, 15); // Ambil 15 teratas untuk grafik agar tidak terlalu padat
 
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.slice(0, 25), // Batasi 25 poli teratas agar rapi
+                labels: displayData.map(d => d.nama),
                 datasets: [
-                    {
-                        label: 'Laki-laki',
-                        data: laki.slice(0, 25),
-                        backgroundColor: '#3498db',
-                    },
-                    {
-                        label: 'Perempuan',
-                        data: peremp.slice(0, 25),
-                        backgroundColor: '#e74c3c',
-                    }
+                    { label: 'Laki-laki', data: displayData.map(d => d.laki), backgroundColor: '#3498db' },
+                    { label: 'Perempuan', data: displayData.map(d => d.peremp), backgroundColor: '#e74c3c' }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'y',
-                scales: {
-                    x: { 
-                        stacked: true,
-                        title: { display: true, text: 'Jumlah Pasien' }
-                    },
-                    y: { 
-                        stacked: true 
-                    }
-                },
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            footer: (tooltipItems) => {
-                                let sum = 0;
-                                tooltipItems.forEach(i => sum += i.raw);
-                                return 'Total: ' + sum;
-                            }
-                        }
-                    }
-                }
+                scales: { x: { stacked: true }, y: { stacked: true } }
             }
         });
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        const tfoot = document.getElementById('tableFooter');
+        tbody.innerHTML = "";
+        
+        let grandL = 0, grandP = 0, grandT = 0;
+
+        data.forEach((item, index) => {
+            grandL += item.laki;
+            grandP += item.peremp;
+            grandT += item.total;
+
+            const row = `<tr>
+                <td>${index + 1}</td>
+                <td class="text-left">${item.nama}</td>
+                <td>${item.laki.toLocaleString()}</td>
+                <td>${item.peremp.toLocaleString()}</td>
+                <td class="bold">${item.total.toLocaleString()}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+
+        // Update Footer Total
+        tfoot.innerHTML = `
+            <td colspan="2">TOTAL KESELURUHAN</td>
+            <td>${grandL.toLocaleString()}</td>
+            <td>${grandP.toLocaleString()}</td>
+            <td>${grandT.toLocaleString()}</td>
+        `;
     }
 
     loadData();
