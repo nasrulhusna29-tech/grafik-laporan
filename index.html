@@ -5,115 +5,168 @@
     <title>Dashboard Analisis Pasien - Puskesmas Cilincing</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Gaya Dasar & Header/Footer ala Puskesmas Cilincing */
         :root {
-            --primary-color: #007bff;
+            --primary-color: #007bff; /* Biru Jakarta */
             --dark-color: #2c3e50;
-            --light-bg: #f8f9fa;
-            --border-color: #dee2e6;
+            --light-bg: #f4f7f6;
         }
 
         body { 
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: var(--light-bg); 
-            margin: 0; padding: 0; color: #333;
+            margin: 0; 
+            padding: 0; 
+            color: #333;
         }
 
+        /* HEADER */
         header {
-            background: white; border-bottom: 4px solid var(--primary-color);
-            padding: 20px 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: white;
+            border-bottom: 4px solid var(--primary-color);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header-logo h1 { margin: 0; font-size: 1.5rem; color: var(--dark-color); }
-        .header-logo p { margin: 0; font-size: 0.9rem; color: #6c757d; }
 
-        .main-content { padding: 40px 20px; max-width: 1200px; margin: auto; }
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--dark-color);
+            text-transform: uppercase;
+        }
+
+        .logo-text p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        /* CONTAINER UTAMA */
+        .main-content {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: auto;
+            min-height: 80vh;
+        }
 
         .dashboard-card {
-            background: white; padding: 30px; border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         .controls { 
-            display: flex; justify-content: center; gap: 20px; 
-            margin-bottom: 35px; flex-wrap: wrap; background: #f1f3f5;
-            padding: 20px; border-radius: 12px;
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            margin-bottom: 30px; 
+            flex-wrap: wrap; 
         }
+
+        .control-group { text-align: left; }
         
-        .control-group label { font-weight: 600; font-size: 0.9rem; color: var(--dark-color); }
         select { 
-            padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); 
-            min-width: 220px; margin-top: 5px; outline: none;
+            padding: 10px; 
+            border-radius: 6px; 
+            border: 1px solid #ccc; 
+            min-width: 200px; 
+            margin-top: 5px; 
+            font-size: 14px;
         }
 
-        .chart-box { height: 400px; margin-bottom: 50px; }
-
-        /* TABEL SIK TERURUT */
-        .table-container { 
-            margin-top: 30px; border-radius: 12px; overflow: hidden; 
-            border: 1px solid var(--border-color);
-        }
-
-        table { width: 100%; border-collapse: collapse; background: white; }
+        .status-msg { font-size: 14px; color: var(--primary-color); margin-bottom: 15px; height: 20px; font-weight: bold; }
         
-        thead th { 
-            background-color: #f8f9fa; color: var(--dark-color); 
-            font-weight: 700; text-transform: uppercase; font-size: 0.75rem;
-            padding: 15px; border-bottom: 2px solid var(--border-color);
-            cursor: pointer; position: relative; transition: 0.2s;
-            user-select: none;
+        .chart-box { position: relative; height: 450px; margin-bottom: 40px; }
+
+        /* TABEL */
+        .table-container { margin-top: 20px; overflow-x: auto; border-radius: 8px; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background-color: var(--dark-color); color: white; padding: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        .bold { font-weight: bold; }
+        .total-row { background-color: #f1f1f1 !important; font-weight: bold; }
+
+        /* FOOTER */
+        footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 40px 50px 20px;
+            margin-top: 50px;
+            text-align: left;
         }
 
-        thead th:hover { background-color: #e9ecef; color: var(--primary-color); }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
 
-        /* Icon Sort */
-        thead th::after { content: ' ↕'; opacity: 0.3; font-size: 0.8rem; }
-        thead th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--primary-color); }
-        thead th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--primary-color); }
-
-        tbody td { padding: 14px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; }
-        tbody tr:nth-child(even) { background-color: #fafafa; }
-        tbody tr:hover { background-color: #f1f7ff; }
-
-        .text-left { text-align: left; padding-left: 25px; }
-        .badge-total { background: #ebf4ff; color: var(--primary-color); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
-
-        tfoot tr { background-color: var(--dark-color) !important; color: white; }
-        tfoot td { padding: 15px; font-weight: 700; }
-
-        footer { background: var(--dark-color); color: white; padding: 40px 20px; margin-top: 60px; text-align: center; }
+        .footer-info h4 { border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; display: inline-block; }
+        .footer-info p { font-size: 0.9rem; line-height: 1.6; color: #bdc3c7; }
+        
+        .footer-bottom {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-logo">
-        <h1>Puskesmas Kecamatan Cilincing</h1>
-        <p>Dashboard Monitoring Kunjungan Pasien</p>
+        <div class="logo-text">
+            <h1>Puskesmas Kecamatan Cilincing</h1>
+            <p>Dinas Kesehatan Provinsi DKI Jakarta</p>
+        </div>
     </div>
 </header>
 
 <div class="main-content">
     <div class="dashboard-card">
-        <h2 style="text-align:center; margin-bottom: 30px;">Statistik Unit Pelayanan</h2>
+        <h2 style="text-align:center; color: var(--dark-color);">Laporan Kunjungan Pasien 2025</h2>
+        <div id="loading" class="status-msg" style="text-align:center;"></div>
         
-        <div id="loading" style="text-align:center; color: var(--primary-color); font-weight: bold;"></div>
-
         <div class="controls">
             <div class="control-group">
-                <label>Filter Periode:</label><br>
+                <label>Periode:</label><br>
                 <select id="bulan" onchange="loadData()">
-                    <option value="TOTAL">Seluruh Bulan (Tahunan)</option>
-                    <option value="JAN">Januari</option><option value="FEB">Februari</option>
-                    <option value="MAR">Maret</option><option value="APR">April</option>
-                    <option value="MEI">Mei</option><option value="JUN">Juni</option>
-                    <option value="JUL">Juli</option><option value="AGS">Agustus</option>
-                    <option value="SEP">September</option><option value="OKT">Oktober</option>
-                    <option value="NOV">November</option><option value="DES">Desember</option>
+                    <option value="TOTAL">-- TOTAL TAHUNAN --</option>
+                    <option value="JAN">Januari</option>
+                    <option value="FEB">Februari</option>
+                    <option value="MAR">Maret</option>
+                    <option value="APR">April</option>
+                    <option value="MEI">Mei</option>
+                    <option value="JUN">Juni</option>
+                    <option value="JUL">Juli</option>
+                    <option value="AGS">Agustus</option>
+                    <option value="SEP">September</option>
+                    <option value="OKT">Oktober</option>
+                    <option value="NOV">November</option>
+                    <option value="DES">Desember</option>
                 </select>
             </div>
+
             <div class="control-group">
-                <label>Cari Unit Pelayanan:</label><br>
+                <label>Filter Ruangan/Poli:</label><br>
                 <select id="filterPoli" onchange="applyFilter()">
-                    <option value="SEMUA">Semua Unit Pelayanan</option>
+                    <option value="SEMUA">-- Semua Poli --</option>
                 </select>
             </div>
         </div>
@@ -123,33 +176,55 @@
         </div>
 
         <div class="table-container">
-            <table id="mainTable">
+            <table>
                 <thead>
                     <tr>
-                        <th onclick="sortData('no')">No</th>
-                        <th class="text-left" onclick="sortData('nama')">Unit Pelayanan</th>
-                        <th onclick="sortData('laki')">Laki-laki (L)</th>
-                        <th onclick="sortData('peremp')">Perempuan (P)</th>
-                        <th onclick="sortData('total')">Total Pasien</th>
+                        <th>No</th>
+                        <th style="text-align:left; padding-left:20px;">Unit Pelayanan</th>
+                        <th>Laki-laki</th>
+                        <th>Perempuan</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
                 <tfoot>
-                    <tr id="tableFooter"></tr>
+                    <tr id="tableFooter" class="total-row"></tr>
                 </tfoot>
             </table>
         </div>
     </div>
 </div>
 
-<footer>&copy; 2026 Puskesmas Cilincing - Jakarta Utara</footer>
+<footer>
+    <div class="footer-grid">
+        <div class="footer-info">
+            <h4>Hubungi Kami</h4>
+            <p>
+                Jl. Madya Kebantenan No.45, RT.1/RW.2, <br>
+                Semper Timur, Kec. Cilincing, <br>
+                Jakarta Utara, DKI Jakarta 14130
+            </p>
+        </div>
+        <div class="footer-info">
+            <h4>Layanan Kesehatan</h4>
+            <p>
+                Senin - Jum'at: 24 Jam (UGD/Rawat Inap)<br>
+                Poliklinik: 07:30 - 16:00 WIB
+            </p>
+        </div>
+        <div class="footer-info">
+            <h4>Media Sosial</h4>
+            <p>Instagram: @puskesmas_cilincing</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 Puskesmas Kecamatan Cilincing. All Rights Reserved.
+    </div>
+</footer>
 
 <script>
     let chartInstance = null;
-    let rawDataStore = []; // Data asli dari CSV
-    let currentProcessedData = []; // Data yang sedang ditampilkan (setelah filter/sort)
-    let sortConfig = { key: 'total', direction: 'desc' };
-
+    let rawDataStore = [];
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const daftarBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
 
@@ -157,26 +232,36 @@
         const selection = document.getElementById('bulan').value;
         const loader = document.getElementById('loading');
         rawDataStore = [];
-        loader.innerHTML = "Mengsinkronkan data...";
+
+        loader.innerHTML = "Memproses Data...";
 
         if (selection === "TOTAL") {
             let agregasiPoli = {};
             for (let b of daftarBulan) {
                 const dataBulan = await fetchCSV(b);
                 dataBulan.forEach(item => {
-                    if (!agregasiPoli[item.nama]) agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
+                    if (!agregasiPoli[item.nama]) {
+                        agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
+                    }
                     agregasiPoli[item.nama].laki += item.laki;
                     agregasiPoli[item.nama].peremp += item.peremp;
                     agregasiPoli[item.nama].total += item.total;
                 });
             }
             for (let poli in agregasiPoli) {
-                rawDataStore.push({ nama: poli, ...agregasiPoli[poli] });
+                rawDataStore.push({ 
+                    nama: poli, 
+                    laki: agregasiPoli[poli].laki, 
+                    peremp: agregasiPoli[poli].peremp, 
+                    total: agregasiPoli[poli].total 
+                });
             }
+            loader.innerHTML = "Berhasil Menampilkan Data Tahunan.";
         } else {
             rawDataStore = await fetchCSV(selection);
+            loader.innerHTML = `Data Bulan ${selection} Berhasil Dimuat.`;
         }
-        loader.innerHTML = "";
+
         updatePoliDropdown();
         applyFilter();
     }
@@ -190,18 +275,17 @@
                 const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
                 return matches ? matches.map(m => m.replace(/"/g, "")) : [];
             });
+
             let listData = [];
             for (let i = 12; i < rows.length; i++) {
                 const row = rows[i];
                 if (row && row[1]) {
                     const nama = row[1].trim();
-                    if (nama !== "" && !nama.includes("TOTAL") && nama !== "NAMA RUANGAN / POLI") {
-                        listData.push({ 
-                            nama: nama, 
-                            laki: parseInt(row[2]) || 0, 
-                            peremp: parseInt(row[3]) || 0, 
-                            total: parseInt(row[4]) || 0 
-                        });
+                    const L = parseInt(row[2]) || 0;
+                    const P = parseInt(row[3]) || 0;
+                    const T = parseInt(row[4]) || 0;
+                    if (nama !== "" && nama !== "NAMA RUANGAN / POLI" && !nama.includes("TOTAL")) {
+                        listData.push({ nama, laki: L, peremp: P, total: T });
                     }
                 }
             }
@@ -211,77 +295,48 @@
 
     function updatePoliDropdown() {
         const filterSelect = document.getElementById('filterPoli');
+        const currentVal = filterSelect.value;
         let poliSet = new Set(rawDataStore.map(d => d.nama));
-        filterSelect.innerHTML = '<option value="SEMUA">Semua Unit Pelayanan</option>';
+        filterSelect.innerHTML = '<option value="SEMUA">-- Semua Poli --</option>';
         Array.from(poliSet).sort().forEach(poli => {
             const opt = document.createElement('option');
             opt.value = poli; opt.innerHTML = poli;
+            if (poli === currentVal) opt.selected = true;
             filterSelect.appendChild(opt);
         });
     }
 
     function applyFilter() {
         const filterValue = document.getElementById('filterPoli').value;
-        currentProcessedData = (filterValue === "SEMUA") 
-            ? [...rawDataStore] 
-            : rawDataStore.filter(d => d.nama === filterValue);
-        
-        // Selalu urutkan ulang setelah ganti filter berdasarkan config terakhir
-        executeSort();
-    }
-
-    // FUNGSI PENGURUTAN (SORT)
-    function sortData(key) {
-        if (sortConfig.key === key) {
-            sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-            sortConfig.key = key;
-            sortConfig.direction = 'desc'; // Default klik kolom baru = terbesar
+        let filteredData = [...rawDataStore];
+        if (filterValue !== "SEMUA") {
+            filteredData = rawDataStore.filter(d => d.nama === filterValue);
         }
-        
-        // Update tampilan header
-        document.querySelectorAll('th').forEach(th => th.className = th.classList.contains('text-left') ? 'text-left' : '');
-        const headers = document.querySelectorAll('th');
-        const indexMap = { no:0, nama:1, laki:2, peremp:3, total:4 };
-        headers[indexMap[key]].classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-
-        executeSort();
-    }
-
-    function executeSort() {
-        currentProcessedData.sort((a, b) => {
-            let valA = a[sortConfig.key];
-            let valB = b[sortConfig.key];
-
-            if (sortConfig.key === 'no') return 0; // No tidak diurutkan secara data, tapi secara tampilan
-
-            if (typeof valA === 'string') {
-                return sortConfig.direction === 'asc' 
-                    ? valA.localeCompare(valB) 
-                    : valB.localeCompare(valA);
-            } else {
-                return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
-            }
-        });
-
-        renderChart(currentProcessedData);
-        renderTable(currentProcessedData);
+        filteredData.sort((a, b) => b.total - a.total);
+        renderChart(filteredData);
+        renderTable(filteredData);
     }
 
     function renderChart(data) {
         const ctx = document.getElementById('myChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-        const slice = data.slice(0, 10);
+        const displayData = data.slice(0, 10); 
+
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: slice.map(d => d.nama),
+                labels: displayData.map(d => d.nama),
                 datasets: [
-                    { label: 'Laki-laki', data: slice.map(d => d.laki), backgroundColor: '#3498db' },
-                    { label: 'Perempuan', data: slice.map(d => d.peremp), backgroundColor: '#e74c3c' }
+                    { label: 'Laki-laki', data: displayData.map(d => d.laki), backgroundColor: '#3498db' },
+                    { label: 'Perempuan', data: displayData.map(d => d.peremp), backgroundColor: '#e74c3c' }
                 ]
             },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: { x: { stacked: true }, y: { stacked: true } }
+            }
         });
     }
 
@@ -295,16 +350,13 @@
             gL += item.laki; gP += item.peremp; gT += item.total;
             tbody.innerHTML += `<tr>
                 <td>${index + 1}</td>
-                <td class="text-left"><strong>${item.nama}</strong></td>
-                <td>${item.laki.toLocaleString('id-ID')}</td>
-                <td>${item.peremp.toLocaleString('id-ID')}</td>
-                <td><span class="badge-total">${item.total.toLocaleString('id-ID')}</span></td>
+                <td style="text-align:left; padding-left:20px;">${item.nama}</td>
+                <td>${item.laki.toLocaleString()}</td>
+                <td>${item.peremp.toLocaleString()}</td>
+                <td class="bold">${item.total.toLocaleString()}</td>
             </tr>`;
         });
-        tfoot.innerHTML = `<td colspan="2" style="text-align:right; padding-right:25px;">TOTAL KESELURUHAN</td>
-            <td>${gL.toLocaleString('id-ID')}</td>
-            <td>${gP.toLocaleString('id-ID')}</td>
-            <td>${gT.toLocaleString('id-ID')}</td>`;
+        tfoot.innerHTML = `<td colspan="2">TOTAL KESELURUHAN</td><td>${gL.toLocaleString()}</td><td>${gP.toLocaleString()}</td><td>${gT.toLocaleString()}</td>`;
     }
 
     loadData();
