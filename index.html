@@ -30,13 +30,13 @@
         
         thead th { 
             background: #f0f0f0; color: #333; font-size: 11px;
-            padding: 1px 2px; border: 1px solid #ddd;
+            padding: 4px 5px; border: 1px solid #ddd;
             cursor: pointer; position: sticky; top: 0; z-index: 10;
         }
 
         tbody td { 
-            padding: 1px 2px; border: 1px solid #eee; 
-            font-size: 10px; color: #444;
+            padding: 3px 5px; border: 1px solid #eee; 
+            font-size: 11px; color: #444;
         }
 
         tbody tr:nth-child(even) { background: #fafafa; }
@@ -68,4 +68,174 @@
                 <option value="MAR">MAR</option><option value="APR">APR</option>
                 <option value="MEI">MEI</option><option value="JUN">JUN</option>
                 <option value="JUL">JUL</option><option value="AGS">AGS</option>
-                <option value="SEP">SEP</option>
+                <option value="SEP">SEP</option><option value="OKT">OKT</option>
+                <option value="NOV">NOV</option><option value="DES">DES</option>
+            </select>
+            <select id="filterPoli" onchange="applyFilter()">
+                <option value="SEMUA">SEMUA POLI</option>
+            </select>
+        </div>
+
+        <div class="chart-box">
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortData('no')" width="20">#</th>
+                        <th class="text-left" onclick="sortData('nama')">UNIT PELAYANAN</th>
+                        <th onclick="sortData('laki')" width="40">L</th>
+                        <th onclick="sortData('peremp')" width="40">P</th>
+                        <th onclick="sortData('total')" width="50">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot>
+                    <tr id="tableFooter"></tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer>&copy; 2026 Puskesmas Cilincing</footer>
+
+<script>
+    let chartInstance = null;
+    let rawDataStore = [];
+    let currentProcessedData = [];
+    let sortConfig = { key: 'total', direction: 'desc' };
+    const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
+    const daftarBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
+
+    async function loadData() {
+        const selection = document.getElementById('bulan').value;
+        const status = document.getElementById('status');
+        status.innerText = "Sync...";
+        rawDataStore = [];
+
+        if (selection === "TOTAL") {
+            let agregasiPoli = {};
+            for (let b of daftarBulan) {
+                const dataBulan = await fetchCSV(b);
+                dataBulan.forEach(item => {
+                    if (!agregasiPoli[item.nama]) agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
+                    agregasiPoli[item.nama].laki += item.laki;
+                    agregasiPoli[item.nama].peremp += item.peremp;
+                    agregasiPoli[item.nama].total += item.total;
+                });
+            }
+            for (let poli in agregasiPoli) rawDataStore.push({ nama: poli, ...agregasiPoli[poli] });
+        } else {
+            rawDataStore = await fetchCSV(selection);
+        }
+        status.innerText = "";
+        updatePoliDropdown();
+        applyFilter();
+    }
+
+    async function fetchCSV(sheetName) {
+        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+        try {
+            const response = await fetch(url);
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => {
+                const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                return matches ? matches.map(m => m.replace(/"/g, "")) : [];
+            });
+            let listData = [];
+            for (let i = 12; i < rows.length; i++) {
+                const row = rows[i];
+                if (row && row[1]) {
+                    const nama = row[1].trim();
+                    if (nama !== "" && !nama.includes("TOTAL") && nama !== "NAMA RUANGAN / POLI") {
+                        listData.push({ 
+                            nama: nama, 
+                            laki: parseInt(row[2]) || 0, 
+                            peremp: parseInt(row[3]) || 0, 
+                            total: parseInt(row[4]) || 0 
+                        });
+                    }
+                }
+            }
+            return listData;
+        } catch (e) { return []; }
+    }
+
+    function updatePoliDropdown() {
+        const filterSelect = document.getElementById('filterPoli');
+        let poliSet = new Set(rawDataStore.map(d => d.nama));
+        filterSelect.innerHTML = '<option value="SEMUA">SEMUA POLI</option>';
+        Array.from(poliSet).sort().forEach(poli => {
+            const opt = document.createElement('option');
+            opt.value = poli; opt.innerHTML = poli;
+            filterSelect.appendChild(opt);
+        });
+    }
+
+    function applyFilter() {
+        const filterValue = document.getElementById('filterPoli').value;
+        currentProcessedData = (filterValue === "SEMUA") ? [...rawDataStore] : rawDataStore.filter(d => d.nama === filterValue);
+        executeSort();
+    }
+
+    function sortData(key) {
+        sortConfig.direction = (sortConfig.key === key && sortConfig.direction === 'desc') ? 'asc' : 'desc';
+        sortConfig.key = key;
+        executeSort();
+    }
+
+    function executeSort() {
+        currentProcessedData.sort((a, b) => {
+            let valA = a[sortConfig.key], valB = b[sortConfig.key];
+            if (sortConfig.key === 'nama') return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+        });
+        renderChart(currentProcessedData);
+        renderTable(currentProcessedData);
+    }
+
+    function renderChart(data) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        const slice = data.slice(0, 10);
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: slice.map(d => d.nama),
+                datasets: [
+                    { label: 'L', data: slice.map(d => d.laki), backgroundColor: '#3498db' },
+                    { label: 'P', data: slice.map(d => d.peremp), backgroundColor: '#e74c3c' }
+                ]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        const tfoot = document.getElementById('tableFooter');
+        tbody.innerHTML = "";
+        let gL = 0, gP = 0, gT = 0;
+
+        data.forEach((item, index) => {
+            gL += item.laki; gP += item.peremp; gT += item.total;
+            tbody.innerHTML += `<tr>
+                <td style="text-align:center">${index + 1}</td>
+                <td class="text-left">${item.nama}</td>
+                <td style="text-align:center">${item.laki}</td>
+                <td style="text-align:center">${item.peremp}</td>
+                <td style="text-align:center" class="badge-total">${item.total}</td>
+            </tr>`;
+        });
+        tfoot.innerHTML = `<td colspan="2" style="text-align:right">SUM:</td>
+            <td style="text-align:center">${gL}</td><td style="text-align:center">${gP}</td>
+            <td style="text-align:center">${gT}</td>`;
+    }
+
+    loadData();
+</script>
+</body>
+</html>
