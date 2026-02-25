@@ -2,54 +2,81 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Analisis Pasien - Puskesmas Cilincing</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #007bff;
+            --secondary-color: #6c757d;
             --dark-color: #2c3e50;
             --light-bg: #f8f9fa;
             --border-color: #dee2e6;
+            --success-color: #28a745;
         }
 
         body { 
-            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Inter', sans-serif; 
             background: var(--light-bg); 
             margin: 0; padding: 0; color: #333;
+            line-height: 1.6;
         }
 
         header {
             background: white; border-bottom: 4px solid var(--primary-color);
             padding: 20px 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .header-logo h1 { margin: 0; font-size: 1.5rem; color: var(--dark-color); }
-        .header-logo p { margin: 0; font-size: 0.9rem; color: #6c757d; }
 
-        .main-content { padding: 40px 20px; max-width: 1200px; margin: auto; }
+        .header-logo h1 { margin: 0; font-size: 1.5rem; color: var(--dark-color); }
+        .header-logo p { margin: 0; font-size: 0.9rem; color: var(--secondary-color); }
+
+        .main-content { padding: 30px 20px; max-width: 1300px; margin: auto; }
 
         .dashboard-card {
             background: white; padding: 30px; border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
+        /* Status Loader */
+        #loading { 
+            text-align: center; 
+            height: 20px; 
+            margin-bottom: 10px; 
+            font-weight: 600; 
+            color: var(--primary-color); 
+        }
+
+        /* Kontrol Filter */
         .controls { 
             display: flex; justify-content: center; gap: 20px; 
             margin-bottom: 35px; flex-wrap: wrap; background: #f1f3f5;
-            padding: 20px; border-radius: 12px;
+            padding: 25px; border-radius: 12px;
         }
         
-        .control-group label { font-weight: 600; font-size: 0.9rem; color: var(--dark-color); }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group label { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: var(--secondary-color); }
+        
         select { 
-            padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); 
-            min-width: 220px; margin-top: 5px; outline: none;
+            padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); 
+            min-width: 250px; outline: none; transition: border 0.3s;
+            background: white; cursor: pointer;
         }
 
-        .chart-box { height: 400px; margin-bottom: 50px; }
+        select:focus { border-color: var(--primary-color); }
 
-        /* TABEL SIK TERURUT */
+        /* Grafik */
+        .chart-container { 
+            position: relative; height: 450px; margin-bottom: 50px; 
+            background: #fff; padding: 15px; border-radius: 10px;
+        }
+
+        /* Tabel SIK */
         .table-container { 
             margin-top: 30px; border-radius: 12px; overflow: hidden; 
             border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
         table { width: 100%; border-collapse: collapse; background: white; }
@@ -57,29 +84,42 @@
         thead th { 
             background-color: #f8f9fa; color: var(--dark-color); 
             font-weight: 700; text-transform: uppercase; font-size: 0.75rem;
-            padding: 15px; border-bottom: 2px solid var(--border-color);
-            cursor: pointer; position: relative; transition: 0.2s;
-            user-select: none;
+            padding: 18px 15px; border-bottom: 2px solid var(--border-color);
+            cursor: pointer; transition: 0.2s; user-select: none;
         }
 
         thead th:hover { background-color: #e9ecef; color: var(--primary-color); }
 
-        /* Icon Sort */
-        thead th::after { content: ' ↕'; opacity: 0.3; font-size: 0.8rem; }
+        /* Sort Icons */
+        thead th::after { content: ' ↕'; opacity: 0.2; font-size: 0.8rem; margin-left: 5px; }
         thead th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--primary-color); }
         thead th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--primary-color); }
 
-        tbody td { padding: 14px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; }
+        tbody td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; text-align: center; }
         tbody tr:nth-child(even) { background-color: #fafafa; }
         tbody tr:hover { background-color: #f1f7ff; }
 
-        .text-left { text-align: left; padding-left: 25px; }
-        .badge-total { background: #ebf4ff; color: var(--primary-color); padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+        .text-left { text-align: left !important; padding-left: 25px !important; }
+        
+        .badge-total { 
+            background: #e7f1ff; color: var(--primary-color); 
+            padding: 6px 12px; border-radius: 20px; font-weight: 700; 
+            display: inline-block; min-width: 40px;
+        }
 
         tfoot tr { background-color: var(--dark-color) !important; color: white; }
-        tfoot td { padding: 15px; font-weight: 700; }
+        tfoot td { padding: 18px; font-weight: 700; font-size: 1rem; }
 
-        footer { background: var(--dark-color); color: white; padding: 40px 20px; margin-top: 60px; text-align: center; }
+        footer { 
+            background: var(--dark-color); color: #bdc3c7; 
+            padding: 30px 20px; margin-top: 60px; text-align: center; font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls { flex-direction: column; align-items: stretch; }
+            select { min-width: 100%; }
+            .chart-container { height: 350px; }
+        }
     </style>
 </head>
 <body>
@@ -87,21 +127,21 @@
 <header>
     <div class="header-logo">
         <h1>Puskesmas Kecamatan Cilincing</h1>
-        <p>Dashboard Monitoring Kunjungan Pasien</p>
+        <p>Sistem Informasi Monitoring Kunjungan Pasien</p>
     </div>
+    <div id="last-update" style="font-size: 0.8rem; color: var(--secondary-color);"></div>
 </header>
 
 <div class="main-content">
     <div class="dashboard-card">
-        <h2 style="text-align:center; margin-bottom: 30px;">Statistik Unit Pelayanan</h2>
-        
-        <div id="loading" style="text-align:center; color: var(--primary-color); font-weight: bold;"></div>
+        <h2 style="text-align:center; margin-bottom: 10px; color: var(--dark-color);">Statistik Unit Pelayanan</h2>
+        <div id="loading"></div>
 
         <div class="controls">
             <div class="control-group">
-                <label>Filter Periode:</label><br>
+                <label>Periode Waktu</label>
                 <select id="bulan" onchange="loadData()">
-                    <option value="TOTAL">Seluruh Bulan (Tahunan)</option>
+                    <option value="TOTAL">Seluruh Bulan (Kumulatif 2026)</option>
                     <option value="JAN">Januari</option><option value="FEB">Februari</option>
                     <option value="MAR">Maret</option><option value="APR">April</option>
                     <option value="MEI">Mei</option><option value="JUN">Juni</option>
@@ -111,14 +151,14 @@
                 </select>
             </div>
             <div class="control-group">
-                <label>Cari Unit Pelayanan:</label><br>
+                <label>Unit Pelayanan</label>
                 <select id="filterPoli" onchange="applyFilter()">
                     <option value="SEMUA">Semua Unit Pelayanan</option>
                 </select>
             </div>
         </div>
 
-        <div class="chart-box">
+        <div class="chart-container">
             <canvas id="myChart"></canvas>
         </div>
 
@@ -126,8 +166,8 @@
             <table id="mainTable">
                 <thead>
                     <tr>
-                        <th onclick="sortData('no')">No</th>
-                        <th class="text-left" onclick="sortData('nama')">Unit Pelayanan</th>
+                        <th style="width: 50px;" onclick="sortData('no')">No</th>
+                        <th class="text-left" onclick="sortData('nama')">Nama Unit Pelayanan</th>
                         <th onclick="sortData('laki')">Laki-laki (L)</th>
                         <th onclick="sortData('peremp')">Perempuan (P)</th>
                         <th onclick="sortData('total')">Total Pasien</th>
@@ -142,12 +182,15 @@
     </div>
 </div>
 
-<footer>&copy; 2026 Puskesmas Cilincing - Jakarta Utara</footer>
+<footer>
+    &copy; 2026 Puskesmas Kecamatan Cilincing - Jakarta Utara<br>
+    Dikembangkan untuk Visualisasi Data Rekapitulasi Pasien
+</footer>
 
 <script>
     let chartInstance = null;
-    let rawDataStore = []; // Data asli dari CSV
-    let currentProcessedData = []; // Data yang sedang ditampilkan (setelah filter/sort)
+    let rawDataStore = []; 
+    let currentProcessedData = []; 
     let sortConfig = { key: 'total', direction: 'desc' };
 
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
@@ -156,46 +199,68 @@
     async function loadData() {
         const selection = document.getElementById('bulan').value;
         const loader = document.getElementById('loading');
-        rawDataStore = [];
-        loader.innerHTML = "Mengsinkronkan data...";
-
-        if (selection === "TOTAL") {
-            let agregasiPoli = {};
-            for (let b of daftarBulan) {
-                const dataBulan = await fetchCSV(b);
-                dataBulan.forEach(item => {
-                    if (!agregasiPoli[item.nama]) agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
+        loader.innerHTML = "⌛ Menyingkronkan data dari server...";
+        
+        try {
+            if (selection === "TOTAL") {
+                // Fetch paralel semua bulan
+                const promises = daftarBulan.map(b => fetchCSV(b));
+                const allMonthsResults = await Promise.all(promises);
+                
+                let agregasiPoli = {};
+                allMonthsResults.flat().forEach(item => {
+                    if (!agregasiPoli[item.nama]) {
+                        agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
+                    }
                     agregasiPoli[item.nama].laki += item.laki;
                     agregasiPoli[item.nama].peremp += item.peremp;
                     agregasiPoli[item.nama].total += item.total;
                 });
+
+                rawDataStore = Object.keys(agregasiPoli).map(nama => ({
+                    nama: nama,
+                    ...agregasiPoli[nama]
+                }));
+            } else {
+                rawDataStore = await fetchCSV(selection);
             }
-            for (let poli in agregasiPoli) {
-                rawDataStore.push({ nama: poli, ...agregasiPoli[poli] });
-            }
-        } else {
-            rawDataStore = await fetchCSV(selection);
+
+            loader.innerHTML = "✅ Data Terupdate";
+            setTimeout(() => loader.innerHTML = "", 2000);
+            
+            updatePoliDropdown();
+            applyFilter();
+        } catch (error) {
+            loader.innerHTML = "❌ Gagal memuat data. Periksa ID Spreadsheet atau Koneksi.";
+            console.error("Error LoadData:", error);
         }
-        loader.innerHTML = "";
-        updatePoliDropdown();
-        applyFilter();
     }
 
     async function fetchCSV(sheetName) {
         const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
         try {
             const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
             const csvText = await response.text();
+            
+            // Parsing CSV (menghindari masalah koma di dalam kutip)
             const rows = csvText.split('\n').map(row => {
                 const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                return matches ? matches.map(m => m.replace(/"/g, "")) : [];
+                return matches ? matches.map(m => m.replace(/^"|"$/g, "")) : [];
             });
+
             let listData = [];
+            // Skip header (Baris ke-13 data mulai)
             for (let i = 12; i < rows.length; i++) {
                 const row = rows[i];
                 if (row && row[1]) {
                     const nama = row[1].trim();
-                    if (nama !== "" && !nama.includes("TOTAL") && nama !== "NAMA RUANGAN / POLI") {
+                    // Filter baris sampah
+                    if (nama !== "" && 
+                        !nama.toUpperCase().includes("TOTAL") && 
+                        nama !== "NAMA RUANGAN / POLI" &&
+                        row[4] !== undefined) {
+                        
                         listData.push({ 
                             nama: nama, 
                             laki: parseInt(row[2]) || 0, 
@@ -206,18 +271,29 @@
                 }
             }
             return listData;
-        } catch (e) { return []; }
+        } catch (e) {
+            console.error(`Gagal ambil sheet ${sheetName}:`, e);
+            return [];
+        }
     }
 
     function updatePoliDropdown() {
         const filterSelect = document.getElementById('filterPoli');
+        const currentVal = filterSelect.value;
         let poliSet = new Set(rawDataStore.map(d => d.nama));
+        
         filterSelect.innerHTML = '<option value="SEMUA">Semua Unit Pelayanan</option>';
         Array.from(poliSet).sort().forEach(poli => {
             const opt = document.createElement('option');
-            opt.value = poli; opt.innerHTML = poli;
+            opt.value = poli; 
+            opt.innerHTML = poli;
             filterSelect.appendChild(opt);
         });
+        
+        // Kembalikan ke pilihan sebelumnya jika masih ada di list baru
+        if (Array.from(poliSet).includes(currentVal)) {
+            filterSelect.value = currentVal;
+        }
     }
 
     function applyFilter() {
@@ -226,20 +302,18 @@
             ? [...rawDataStore] 
             : rawDataStore.filter(d => d.nama === filterValue);
         
-        // Selalu urutkan ulang setelah ganti filter berdasarkan config terakhir
         executeSort();
     }
 
-    // FUNGSI PENGURUTAN (SORT)
     function sortData(key) {
         if (sortConfig.key === key) {
             sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
         } else {
             sortConfig.key = key;
-            sortConfig.direction = 'desc'; // Default klik kolom baru = terbesar
+            sortConfig.direction = 'desc';
         }
         
-        // Update tampilan header
+        // Update UI
         document.querySelectorAll('th').forEach(th => th.className = th.classList.contains('text-left') ? 'text-left' : '');
         const headers = document.querySelectorAll('th');
         const indexMap = { no:0, nama:1, laki:2, peremp:3, total:4 };
@@ -252,13 +326,10 @@
         currentProcessedData.sort((a, b) => {
             let valA = a[sortConfig.key];
             let valB = b[sortConfig.key];
-
-            if (sortConfig.key === 'no') return 0; // No tidak diurutkan secara data, tapi secara tampilan
+            if (sortConfig.key === 'no') return 0;
 
             if (typeof valA === 'string') {
-                return sortConfig.direction === 'asc' 
-                    ? valA.localeCompare(valB) 
-                    : valB.localeCompare(valA);
+                return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             } else {
                 return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
             }
@@ -271,17 +342,42 @@
     function renderChart(data) {
         const ctx = document.getElementById('myChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-        const slice = data.slice(0, 10);
+        
+        // Tampilkan top 15 saja di grafik agar tidak menumpuk
+        const slice = data.slice(0, 15);
+        
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: slice.map(d => d.nama),
                 datasets: [
-                    { label: 'Laki-laki', data: slice.map(d => d.laki), backgroundColor: '#3498db' },
-                    { label: 'Perempuan', data: slice.map(d => d.peremp), backgroundColor: '#e74c3c' }
+                    { 
+                        label: 'Laki-laki', 
+                        data: slice.map(d => d.laki), 
+                        backgroundColor: '#3498db',
+                        borderRadius: 5
+                    },
+                    { 
+                        label: 'Perempuan', 
+                        data: slice.map(d => d.peremp), 
+                        backgroundColor: '#e74c3c',
+                        borderRadius: 5
+                    }
                 ]
             },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            options: { 
+                indexAxis: 'y', 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: { 
+                    x: { stacked: true, grid: { color: '#f0f0f0' } }, 
+                    y: { stacked: true, grid: { display: false } } 
+                } 
+            }
         });
     }
 
@@ -301,12 +397,15 @@
                 <td><span class="badge-total">${item.total.toLocaleString('id-ID')}</span></td>
             </tr>`;
         });
-        tfoot.innerHTML = `<td colspan="2" style="text-align:right; padding-right:25px;">TOTAL KESELURUHAN</td>
+        
+        tfoot.innerHTML = `
+            <td colspan="2" style="text-align:right; padding-right:25px;">TOTAL KESELURUHAN</td>
             <td>${gL.toLocaleString('id-ID')}</td>
             <td>${gP.toLocaleString('id-ID')}</td>
             <td>${gT.toLocaleString('id-ID')}</td>`;
     }
 
+    // Inisialisasi awal
     loadData();
 </script>
 </body>
