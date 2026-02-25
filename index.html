@@ -2,260 +2,184 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Puskesmas Cilincing - Professional</title>
+    <title>Tren Kunjungan - Puskesmas Cilincing</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #007bff; --dark: #2c3e50; --success: #28a745; }
-        body { font-family: 'Arial Narrow', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 5px; font-size: 12px; }
-        
-        header { background: white; border-bottom: 2px solid var(--primary); padding: 5px 15px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { margin: 0; font-size: 14px; color: var(--dark); }
-
+        body { font-family: 'Arial Narrow', sans-serif; background: #f4f4f4; margin: 0; padding: 5px; font-size: 11px; }
+        header { background: white; border-bottom: 2px solid var(--primary); padding: 5px 15px; display: flex; justify-content: space-between; }
         .main-content { max-width: 1000px; margin: auto; padding: 10px; }
         .dashboard-card { background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-        /* Controls & Buttons */
-        .controls { display: flex; gap: 8px; margin-bottom: 10px; background: #eee; padding: 5px; border-radius: 4px; flex-wrap: wrap; align-items: center; }
-        select { padding: 2px 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 3px; }
-        
-        .btn { padding: 3px 8px; font-size: 11px; cursor: pointer; border: none; border-radius: 3px; color: white; font-weight: bold; }
-        .btn-print { background: var(--dark); }
-        .btn-excel { background: var(--success); }
-        .btn:hover { opacity: 0.8; }
-
-        .chart-box { height: 220px; margin-bottom: 15px; }
-
-        /* Tabel Ekstra Rapat */
-        .table-wrapper { max-height: 350px; overflow-y: auto; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; background: white; line-height: 1.1; }
-        
-        thead th { 
-            background: #f0f0f0; color: #333; font-size: 11px;
-            padding: 4px 5px; border: 1px solid #ddd;
-            cursor: pointer; position: sticky; top: 0; z-index: 10;
-        }
-
-        tbody td { padding: 3px 5px; border: 1px solid #eee; font-size: 11px; color: #444; }
-        tbody tr:nth-child(even) { background: #fafafa; }
-        tbody tr:hover { background: #eef5ff; }
-
+        .controls { display: flex; gap: 8px; margin-bottom: 10px; background: #eee; padding: 5px; border-radius: 4px; align-items: center; }
+        select, button { padding: 2px 5px; font-size: 10px; border: 1px solid #ccc; border-radius: 3px; }
+        .btn-excel { background: var(--success); color: white; border: none; cursor: pointer; }
+        .chart-container { height: 250px; margin-bottom: 15px; }
+        .table-wrapper { max-height: 300px; overflow-y: auto; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; line-height: 1; }
+        thead th { background: #f0f0f0; padding: 4px; border: 1px solid #ddd; position: sticky; top: 0; }
+        tbody td { padding: 3px; border: 1px solid #eee; text-align: center; }
         .text-left { text-align: left; }
-        .badge-total { font-weight: bold; color: var(--primary); }
-
-        tfoot { position: sticky; bottom: 0; z-index: 10; }
-        tfoot tr { background: var(--dark) !important; color: white; font-weight: bold; }
-        tfoot td { padding: 4px 5px; }
-
-        /* Aturan Cetak (Print) */
-        @media print {
-            .controls, header, footer { display: none !important; }
-            .table-wrapper { max-height: none !important; overflow: visible !important; }
-            body { background: white; padding: 0; }
-            .dashboard-card { box-shadow: none; border: none; }
-        }
-
-        footer { text-align: center; font-size: 10px; color: #888; margin-top: 10px; }
+        tfoot tr { background: var(--dark); color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Puskesmas Cilincing - Laporan Kunjungan 2025</h1>
-    <div id="status" style="font-size:10px; color:var(--primary)"></div>
+    <h1 style="font-size: 14px; margin:0;">Tren Kunjungan Pasien 2025</h1>
+    <div id="status" style="color:var(--primary); font-weight:bold;">Memuat Tren...</div>
 </header>
 
 <div class="main-content">
     <div class="dashboard-card">
         <div class="controls">
-            <select id="bulan" onchange="loadData()">
-                <option value="TOTAL">TAHUNAN</option>
-                <option value="JAN">JAN</option><option value="FEB">FEB</option>
-                <option value="MAR">MAR</option><option value="APR">APR</option>
-                <option value="MEI">MEI</option><option value="JUN">JUN</option>
-                <option value="JUL">JUL</option><option value="AGS">AGS</option>
-                <option value="SEP">SEP</option><option value="OKT">OKT</option>
-                <option value="NOV">NOV</option><option value="DES">DES</option>
+            <strong>Mode Lihat:</strong>
+            <select id="viewMode" onchange="processDisplay()">
+                <option value="TREN_TOTAL">Tren Total Puskesmas (Jan-Des)</option>
+                <option value="PER_POLI">Detail Per Poli (Bulan Terpilih)</option>
             </select>
-            <select id="filterPoli" onchange="applyFilter()">
-                <option value="SEMUA">SEMUA POLI</option>
+
+            <select id="bulan" onchange="processDisplay()">
+                <option value="TOTAL">Tahunan</option>
+                <option value="JAN">Januari</option><option value="FEB">Februari</option>
+                <option value="MAR">Maret</option><option value="APR">April</option>
+                <option value="MEI">Mei</option><option value="JUN">Juni</option>
+                <option value="JUL">Juli</option><option value="AGS">Agustus</option>
+                <option value="SEP">September</option><option value="OKT">Oktober</option>
+                <option value="NOV">November</option><option value="DES">Desember</option>
             </select>
-            
-            <button class="btn btn-print" onclick="window.print()">Cetak Laporan</button>
-            <button class="btn btn-excel" onclick="exportToExcel()">Download Excel</button>
+
+            <button class="btn-excel" onclick="exportToExcel()">Excel</button>
         </div>
 
-        <div class="chart-box">
-            <canvas id="myChart"></canvas>
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
         </div>
 
         <div class="table-wrapper">
-            <table id="tableToExport">
+            <table id="dataTable">
                 <thead>
                     <tr>
-                        <th onclick="sortData('no')" width="20">#</th>
-                        <th class="text-left" onclick="sortData('nama')">UNIT PELAYANAN</th>
-                        <th onclick="sortData('laki')" width="40">L</th>
-                        <th onclick="sortData('peremp')" width="40">P</th>
-                        <th onclick="sortData('total')" width="50">TOTAL</th>
+                        <th width="30">#</th>
+                        <th class="text-left">Unit Pelayanan / Periode</th>
+                        <th>L</th>
+                        <th>P</th>
+                        <th>Total</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
-                <tfoot>
-                    <tr id="tableFooter"></tr>
-                </tfoot>
+                <tfoot><tr id="tableFooter"></tr></tfoot>
             </table>
         </div>
     </div>
 </div>
 
-<footer>&copy; 2026 Puskesmas Cilincing - Laporan Dashboard Pasien</footer>
-
 <script>
     let chartInstance = null;
-    let rawDataStore = [];
-    let currentProcessedData = [];
-    let sortConfig = { key: 'total', direction: 'desc' };
+    let monthlyData = {}; // Menyimpan data mentah 12 bulan
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const daftarBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
 
-    async function loadData() {
-        const selection = document.getElementById('bulan').value;
+    async function init() {
         const status = document.getElementById('status');
-        status.innerText = "Sync...";
-        rawDataStore = [];
-
-        try {
-            if (selection === "TOTAL") {
-                let agregasiPoli = {};
-                for (let b of daftarBulan) {
-                    const dataBulan = await fetchCSV(b);
-                    dataBulan.forEach(item => {
-                        if (!agregasiPoli[item.nama]) agregasiPoli[item.nama] = { laki: 0, peremp: 0, total: 0 };
-                        agregasiPoli[item.nama].laki += item.laki;
-                        agregasiPoli[item.nama].peremp += item.peremp;
-                        agregasiPoli[item.nama].total += item.total;
-                    });
-                }
-                for (let poli in agregasiPoli) rawDataStore.push({ nama: poli, ...agregasiPoli[poli] });
-            } else {
-                rawDataStore = await fetchCSV(selection);
-            }
-            status.innerText = "";
-            updatePoliDropdown();
-            applyFilter();
-        } catch (e) {
-            status.innerText = "Error!";
+        for (let b of daftarBulan) {
+            status.innerText = `Sync ${b}...`;
+            monthlyData[b] = await fetchCSV(b);
         }
+        status.innerText = "Data Terupdate";
+        processDisplay();
     }
 
     async function fetchCSV(sheetName) {
         const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
         try {
             const response = await fetch(url);
-            const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => {
-                const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                return matches ? matches.map(m => m.replace(/"/g, "")) : [];
-            });
-            let listData = [];
+            const csv = await response.text();
+            const rows = csv.split('\n').map(r => r.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(m => m.replace(/"/g, "")) || []);
+            let data = [];
             for (let i = 12; i < rows.length; i++) {
-                const row = rows[i];
-                if (row && row[1]) {
-                    const nama = row[1].trim();
-                    if (nama !== "" && !nama.includes("TOTAL") && nama !== "NAMA RUANGAN / POLI") {
-                        listData.push({ 
-                            nama: nama, 
-                            laki: parseInt(row[2]) || 0, 
-                            peremp: parseInt(row[3]) || 0, 
-                            total: parseInt(row[4]) || 0 
-                        });
-                    }
+                if (rows[i][1] && !rows[i][1].includes("TOTAL") && rows[i][1] !== "NAMA RUANGAN / POLI") {
+                    data.push({ nama: rows[i][1].trim(), laki: parseInt(rows[i][2])||0, peremp: parseInt(rows[i][3])||0, total: parseInt(rows[i][4])||0 });
                 }
             }
-            return listData;
-        } catch (e) { return []; }
+            return data;
+        } catch { return []; }
     }
 
-    function updatePoliDropdown() {
-        const filterSelect = document.getElementById('filterPoli');
-        let poliSet = new Set(rawDataStore.map(d => d.nama));
-        filterSelect.innerHTML = '<option value="SEMUA">SEMUA POLI</option>';
-        Array.from(poliSet).sort().forEach(poli => {
-            const opt = document.createElement('option');
-            opt.value = poli; opt.innerHTML = poli;
-            filterSelect.appendChild(opt);
+    function processDisplay() {
+        const mode = document.getElementById('viewMode').value;
+        const bulanAktif = document.getElementById('bulan').value;
+        
+        if (mode === "TREN_TOTAL") {
+            renderTrendTahunan();
+        } else {
+            renderDetailBulan(bulanAktif);
+        }
+    }
+
+    function renderTrendTahunan() {
+        let labels = daftarBulan;
+        let dataTotal = labels.map(b => monthlyData[b].reduce((sum, item) => sum + item.total, 0));
+        let dataLaki = labels.map(b => monthlyData[b].reduce((sum, item) => sum + item.laki, 0));
+        let dataPeremp = labels.map(b => monthlyData[b].reduce((sum, item) => sum + item.peremp, 0));
+
+        updateChart('line', labels, [
+            { label: 'Total Pasien', data: dataTotal, borderColor: '#007bff', fill: false },
+            { label: 'Laki-laki', data: dataLaki, borderColor: '#3498db', borderDash: [5, 5], fill: false },
+            { label: 'Perempuan', data: dataPeremp, borderColor: '#e74c3c', borderDash: [5, 5], fill: false }
+        ]);
+
+        let html = "";
+        labels.forEach((b, i) => {
+            html += `<tr><td>${i+1}</td><td class="text-left">Bulan ${b}</td><td>${dataLaki[i]}</td><td>${dataPeremp[i]}</td><td><strong>${dataTotal[i]}</strong></td></tr>`;
         });
+        document.getElementById('tableBody').innerHTML = html;
+        document.getElementById('tableFooter').innerHTML = `<td colspan="2">RATA-RATA BULANAN</td><td colspan="3">${Math.round(dataTotal.reduce((a,b)=>a+b)/12)} Pasien/Bulan</td>`;
     }
 
-    function applyFilter() {
-        const filterValue = document.getElementById('filterPoli').value;
-        currentProcessedData = (filterValue === "SEMUA") ? [...rawDataStore] : rawDataStore.filter(d => d.nama === filterValue);
-        executeSort();
-    }
+    function renderDetailBulan(bulan) {
+        let data = (bulan === "TOTAL") ? agregasiTahunan() : monthlyData[bulan];
+        data.sort((a,b) => b.total - a.total);
+        let top10 = data.slice(0, 10);
 
-    function sortData(key) {
-        sortConfig.direction = (sortConfig.key === key && sortConfig.direction === 'desc') ? 'asc' : 'desc';
-        sortConfig.key = key;
-        executeSort();
-    }
+        updateChart('bar', top10.map(d => d.nama), [
+            { label: 'L', data: top10.map(d => d.laki), backgroundColor: '#3498db' },
+            { label: 'P', data: top10.map(d => d.peremp), backgroundColor: '#e74c3c' }
+        ]);
 
-    function executeSort() {
-        currentProcessedData.sort((a, b) => {
-            let valA = a[sortConfig.key], valB = b[sortConfig.key];
-            if (sortConfig.key === 'nama') return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+        let html = "";
+        data.forEach((d, i) => {
+            html += `<tr><td>${i+1}</td><td class="text-left">${d.nama}</td><td>${d.laki}</td><td>${d.peremp}</td><td><strong>${d.total}</strong></td></tr>`;
         });
-        renderChart(currentProcessedData);
-        renderTable(currentProcessedData);
+        document.getElementById('tableBody').innerHTML = html;
     }
 
-    function renderChart(data) {
-        const ctx = document.getElementById('myChart').getContext('2d');
+    function agregasiTahunan() {
+        let res = {};
+        daftarBulan.forEach(b => {
+            monthlyData[b].forEach(d => {
+                if(!res[d.nama]) res[d.nama] = { nama: d.nama, laki: 0, peremp: 0, total: 0 };
+                res[d.nama].laki += d.laki; res[d.nama].peremp += d.peremp; res[d.nama].total += d.total;
+            });
+        });
+        return Object.values(res);
+    }
+
+    function updateChart(type, labels, datasets) {
+        const ctx = document.getElementById('trendChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-        const slice = data.slice(0, 10);
         chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: slice.map(d => d.nama),
-                datasets: [
-                    { label: 'L', data: slice.map(d => d.laki), backgroundColor: '#3498db' },
-                    { label: 'P', data: slice.map(d => d.peremp), backgroundColor: '#e74c3c' }
-                ]
-            },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            type: type,
+            data: { labels: labels, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { boxWidth: 10 } } } }
         });
-    }
-
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        const tfoot = document.getElementById('tableFooter');
-        tbody.innerHTML = "";
-        let gL = 0, gP = 0, gT = 0;
-
-        data.forEach((item, index) => {
-            gL += item.laki; gP += item.peremp; gT += item.total;
-            tbody.innerHTML += `<tr>
-                <td style="text-align:center">${index + 1}</td>
-                <td class="text-left">${item.nama}</td>
-                <td style="text-align:center">${item.laki}</td>
-                <td style="text-align:center">${item.peremp}</td>
-                <td style="text-align:center" class="badge-total">${item.total}</td>
-            </tr>`;
-        });
-        tfoot.innerHTML = `<td colspan="2" style="text-align:right">JUMLAH:</td>
-            <td style="text-align:center">${gL}</td><td style="text-align:center">${gP}</td>
-            <td style="text-align:center">${gT}</td>`;
     }
 
     function exportToExcel() {
-        const table = document.getElementById("tableToExport");
-        const wb = XLSX.utils.table_to_book(table, {sheet: "Laporan Kunjungan"});
-        const bulan = document.getElementById('bulan').value;
-        XLSX.writeFile(wb, `Laporan_Puskesmas_Cilincing_${bulan}.xlsx`);
+        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("dataTable")), "Laporan_Puskesmas.xlsx");
     }
 
-    loadData();
+    init();
 </script>
 </body>
 </html>
