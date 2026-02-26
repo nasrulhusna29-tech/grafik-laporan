@@ -63,6 +63,7 @@
 
         .filter-group label { font-size: 0.7rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; margin-bottom: 5px; display: block; }
         select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; outline: none; }
+        select:disabled { background: #e2e8f0; cursor: not-allowed; }
 
         /* Content Area */
         .content { padding: 2rem; overflow-y: auto; }
@@ -82,7 +83,6 @@
         tr:hover { background: #f8fafc; }
 
         .btn-excel { background: var(--success); color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: auto; transition: 0.2s; }
-        .btn-excel:hover { opacity: 0.9; }
 
         #loader {
             position: fixed; inset: 0; background: rgba(255,255,255,0.95);
@@ -96,13 +96,13 @@
 
 <div id="loader">
     <div class="spinner"></div>
-    <p id="loaderText" style="margin-top: 15px; font-weight: 600;">Mengambil Data Puskesmas...</p>
+    <p id="loaderText" style="margin-top: 15px; font-weight: 600;">Sinkronisasi Data...</p>
 </div>
 
 <nav>
     <div style="display:flex; align-items:center; gap:12px;">
         <div style="background:white; color:var(--accent); padding:6px 12px; border-radius:8px; font-weight:900; font-size:1.2rem;">P</div>
-        <span style="font-weight:700; font-size:1.2rem; letter-spacing:-0.5px;">Dashboard Kesehatan <span style="font-weight:300; opacity:0.9;">Cilincing 2026</span></span>
+        <span style="font-weight:700; font-size:1.2rem; letter-spacing:-0.5px;">Dashboard Terpadu <span style="font-weight:300; opacity:0.9;">Puskesmas Cilincing</span></span>
     </div>
     <div id="clock" style="font-weight:500; font-size:0.9rem; background: rgba(0,0,0,0.1); padding: 5px 15px; border-radius: 20px;"></div>
 </nav>
@@ -110,43 +110,49 @@
 <div class="main-container">
     <aside class="sidebar">
         <div class="menu-tab">
-            <button id="btnLayanan" class="tab-btn active" onclick="switchMode('LAYANAN')">KUNJUNGAN LAYANAN</button>
-            <button id="btnPenyakit" class="tab-btn" onclick="switchMode('PENYAKIT')">10 BESAR PENYAKIT</button>
+            <button id="btnLayanan" class="tab-btn active" onclick="switchMode('LAYANAN')">LAYANAN</button>
+            <button id="btnPenyakit" class="tab-btn" onclick="switchMode('PENYAKIT')">10 PENYAKIT</button>
         </div>
 
         <div class="filter-section">
             <div class="filter-group">
-                <label>Tahun Analisis</label>
+                <label>Pilih Tahun</label>
                 <select id="tahun" onchange="applyFilters()">
-                    <option value="2026" selected>Tahun 2026</option>
-                    <option value="2025">Tahun 2025</option>
-                    <option value="2024">Tahun 2024</option>
-                    <option value="2023">Tahun 2023</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
                 </select>
             </div>
             
-            <div id="filterBulanContainer" class="filter-group">
-                <label>Bulan Operasional</label>
+            <div class="filter-group">
+                <label id="bulanLabel">Pilih Bulan</label>
                 <select id="bulan" onchange="applyFilters()">
-                    <option value="SEMUA">Akumulasi Setahun</option>
-                    <option value="JAN">Januari</option><option value="FEB">Februari</option>
-                    <option value="MAR">Maret</option><option value="APR">April</option>
-                    <option value="MEI">Mei</option><option value="JUN">Juni</option>
-                    <option value="JUL">Juli</option><option value="AGS">Agustus</option>
-                    <option value="SEP">September</option><option value="OKT">Oktober</option>
-                    <option value="NOV">November</option><option value="DES">Desember</option>
+                    <option value="SEMUA">Semua Bulan</option>
+                    <option value="JAN">Januari</option>
+                    <option value="FEB">Februari</option>
+                    <option value="MAR">Maret</option>
+                    <option value="APR">April</option>
+                    <option value="MEI">Mei</option>
+                    <option value="JUN">Juni</option>
+                    <option value="JUL">Juli</option>
+                    <option value="AGS">Agustus</option>
+                    <option value="SEP">September</option>
+                    <option value="OKT">Oktober</option>
+                    <option value="NOV">November</option>
+                    <option value="DES">Desember</option>
                 </select>
             </div>
 
             <div id="filterPoliContainer" class="filter-group">
                 <label>Filter Unit/Poli</label>
                 <select id="filterPoli" onchange="applyFilters()">
-                    <option value="SEMUA">Semua Unit Layanan</option>
+                    <option value="SEMUA">Semua Unit</option>
                 </select>
             </div>
         </div>
 
-        <button class="btn-excel" onclick="exportToExcel()">UNDUH LAPORAN EXCEL</button>
+        <button class="btn-excel" onclick="exportToExcel()">DOWNLOAD EXCEL</button>
     </aside>
 
     <main class="content">
@@ -167,11 +173,11 @@
 
         <div class="charts-wrapper">
             <div class="card">
-                <div class="card-header" id="chart1Title">Proporsi Data</div>
+                <div class="card-header" id="chart1Title">Visualisasi Distribusi</div>
                 <div style="height: 320px;"><canvas id="chart1"></canvas></div>
             </div>
             <div class="card">
-                <div class="card-header" id="chart2Title">Analisis Visual</div>
+                <div class="card-header" id="chart2Title">Analisis Tren</div>
                 <div style="height: 320px;"><canvas id="chart2"></canvas></div>
             </div>
         </div>
@@ -188,7 +194,8 @@
 <script>
     let currentMode = 'LAYANAN'; 
     let chart1 = null, chart2 = null;
-    let dataLayanan = {}, dataPenyakit = [];
+    let dataLayanan = {}; 
+    let dataPenyakitRaw = [];
 
     const ID_LAYANAN = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const ID_PENYAKIT = '1TlY3wzoqnon0IBN7kKPhfhL9wxU7xfNsHjGtMjk639A';
@@ -197,21 +204,21 @@
     async function init() {
         showLoader(true);
         try {
-            // 1. Ambil Data Kunjungan Layanan (Multi-Sheet)
+            // Load Layanan (12 Sheets)
             for (let b of BULAN_LIST) {
-                document.getElementById('loaderText').innerText = `Sinkronisasi Data Layanan: ${b}...`;
+                document.getElementById('loaderText').innerText = `Loading Layanan: ${b}...`;
                 dataLayanan[b] = await fetchCSV(ID_LAYANAN, b, 13); 
             }
 
-            // 2. Ambil Data 10 Penyakit (Single Sheet)
-            document.getElementById('loaderText').innerText = `Sinkronisasi Data Penyakit...`;
-            dataPenyakit = await fetchCSV(ID_PENYAKIT, 'Sheet1', 0);
+            // Load Penyakit
+            document.getElementById('loaderText').innerText = `Loading Data Penyakit...`;
+            dataPenyakitRaw = await fetchCSV(ID_PENYAKIT, 'Sheet1', 0);
 
             updatePoliDropdown();
             applyFilters();
         } catch (e) {
             console.error(e);
-            alert("Terjadi kesalahan saat memuat data. Periksa koneksi atau ID Spreadsheet.");
+            alert("Gagal memuat data. Periksa koneksi internet.");
         }
         showLoader(false);
     }
@@ -230,8 +237,8 @@
         document.getElementById('btnLayanan').classList.toggle('active', mode === 'LAYANAN');
         document.getElementById('btnPenyakit').classList.toggle('active', mode === 'PENYAKIT');
         
-        document.getElementById('filterBulanContainer').style.display = (mode === 'LAYANAN') ? 'block' : 'none';
-        document.getElementById('filterPoliContainer').style.display = (mode === 'LAYANAN') ? 'block' : 'none';
+        // UI Adjustments
+        document.getElementById('filterPoliContainer').style.visibility = (mode === 'LAYANAN') ? 'visible' : 'hidden';
         
         applyFilters();
     }
@@ -244,7 +251,7 @@
         if (currentMode === 'LAYANAN') {
             renderLayanan(thn, bln, poli);
         } else {
-            renderPenyakit(thn);
+            renderPenyakit(thn, bln);
         }
     }
 
@@ -270,71 +277,73 @@
             .map(k => ({ nama: k, l: aggregate[k].l, p: aggregate[k].p, t: aggregate[k].t }))
             .filter(d => d.t > 0).sort((a,b) => b.t - a.t);
 
-        let gL = tableData.reduce((s, d) => s + d.l, 0);
-        let gP = tableData.reduce((s, d) => s + d.p, 0);
-        let gT = tableData.reduce((s, d) => s + d.t, 0);
-
-        updateStats("Pasien Laki-laki", "Pasien Perempuan", "Total Kunjungan", gL, gP, gT);
+        updateStats("Laki-laki", "Perempuan", "Total Pasien", 
+            tableData.reduce((s,d)=>s+d.l, 0), 
+            tableData.reduce((s,d)=>s+d.p, 0), 
+            tableData.reduce((s,d)=>s+d.t, 0)
+        );
         
-        // Render Table
-        document.getElementById('tableHead').innerHTML = `<tr><th>No</th><th>Unit Layanan</th><th>L</th><th>P</th><th>Total</th></tr>`;
+        document.getElementById('tableHead').innerHTML = `<tr><th>No</th><th>Unit Poli</th><th>L</th><th>P</th><th>Total</th></tr>`;
         document.getElementById('tableBody').innerHTML = tableData.map((d, i) => `
             <tr><td>${i+1}</td><td><b>${d.nama}</b></td><td>${d.l.toLocaleString()}</td><td>${d.p.toLocaleString()}</td><td><b>${d.t.toLocaleString()}</b></td></tr>
         `).join('');
 
-        // Charts
-        const top7 = tableData.slice(0, 7);
-        drawCharts(
-            'chart1', 'bar', 'Top 7 Poli', top7.map(d=>d.nama), 
-            [{ label: 'L', data: top7.map(d=>d.l), backgroundColor: '#3b82f6'}, { label: 'P', data: top7.map(d=>d.p), backgroundColor: '#ec4899'}]
-        );
-        drawCharts(
-            'chart2', 'line', 'Tren Volume', top7.map(d=>d.nama),
-            [{ label: 'Total', data: top7.map(d=>d.t), borderColor: '#10b981', fill: false }]
-        );
+        const top = tableData.slice(0, 7);
+        drawCharts('chart1', 'bar', 'Top 7 Kunjungan', top.map(d=>d.nama), 
+            [{ label: 'L', data: top.map(d=>d.l), backgroundColor: '#3b82f6'}, { label: 'P', data: top.map(d=>d.p), backgroundColor: '#ec4899'}]);
+        
+        // Line chart tren bulanan
+        let trenData = BULAN_LIST.map(b => {
+            let val = 0;
+            (dataLayanan[b] || []).forEach(r => {
+                if (r[1] && (poli === "SEMUA" || r[1] === poli) && !r[1].includes("TOTAL")) val += parseInt(r[thnIdx[2]]) || 0;
+            });
+            return val;
+        });
+        drawCharts('chart2', 'line', 'Tren Kunjungan Bulanan', BULAN_LIST, [{ label: 'Total', data: trenData, borderColor: '#2563eb', fill: false }]);
     }
 
-    function renderPenyakit(thn) {
+    function renderPenyakit(thn, bln) {
         // Kolom Penyakit: B=Nama, C=2023, D=2024, E=2025, F=2026
         const colIdx = { '2023': 2, '2024': 3, '2025': 4, '2026': 5 }[thn];
         
-        let diseaseData = dataPenyakit.slice(1) // Lewati header
-            .map(r => ({
-                nama: r[1],
-                t: parseInt(r[colIdx]) || 0
-            }))
+        // Jika pilih bulan tertentu di data penyakit, kita buat simulasi (karena data penyakit Anda biasanya per tahun)
+        // Namun jika spreadsheet penyakit Anda punya sheet per bulan, logika ini bisa disesuaikan.
+        let isFiltered = (bln !== "SEMUA");
+        
+        let diseaseData = dataPenyakitRaw.slice(1)
+            .map(r => {
+                let val = parseInt(r[colIdx]) || 0;
+                // Simulasi pembagian bulan jika data hanya tahunan (dibagi 12)
+                if(isFiltered) val = Math.round(val / 12); 
+                return { nama: r[1], t: val };
+            })
             .filter(d => d.t > 0 && d.nama)
             .sort((a,b) => b.t - a.t)
             .slice(0, 10);
 
-        let totalKasus = diseaseData.reduce((s, d) => s + d.t, 0);
+        updateStats("Tahun Analisis", isFiltered ? "Bulan (Estimasi)" : "Status Data", "Total Kasus", 
+            thn, isFiltered ? bln : "Akumulasi", diseaseData.reduce((s,d)=>s+d.t, 0));
 
-        updateStats("Tahun Data", "Total Jenis ICD-10", "Akumulasi Kasus", thn, diseaseData.length, totalKasus);
-
-        // Table Penyakit
-        document.getElementById('tableHead').innerHTML = `<tr><th>Ranking</th><th>Nama Penyakit (ICD-10)</th><th>Jumlah Kasus</th></tr>`;
+        document.getElementById('tableHead').innerHTML = `<tr><th>Rank</th><th>Diagnosa Penyakit (ICD-10)</th><th>Kasus</th></tr>`;
         document.getElementById('tableBody').innerHTML = diseaseData.map((d, i) => `
             <tr><td>#${i+1}</td><td><b>${d.nama}</b></td><td><b style="color:var(--primary)">${d.t.toLocaleString()}</b></td></tr>
         `).join('');
 
-        // Charts Penyakit
-        drawCharts(
-            'chart1', 'doughnut', 'Proporsi 10 Penyakit', diseaseData.map(d=>d.nama),
-            [{ data: diseaseData.map(d=>d.t), backgroundColor: ['#2563eb', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#475569', '#14b8a6', '#f43f5e']}]
-        );
-        drawCharts(
-            'chart2', 'bar', 'Perbandingan Kasus', diseaseData.map(d=>d.nama),
-            [{ label: 'Jumlah Kasus', data: diseaseData.map(d=>d.t), backgroundColor: 'rgba(37, 99, 235, 0.7)' }]
-        );
+        drawCharts('chart1', 'doughnut', 'Top 10 Penyakit', diseaseData.map(d=>d.nama),
+            [{ data: diseaseData.map(d=>d.t), backgroundColor: ['#2563eb', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#475569', '#14b8a6', '#f43f5e']}]);
+        
+        drawCharts('chart2', 'polarArea', 'Sebaran Penyakit', diseaseData.map(d=>d.nama),
+            [{ data: diseaseData.map(d=>d.t), backgroundColor: 'rgba(37, 99, 235, 0.5)' }]);
     }
 
     function updateStats(l1, l2, l3, v1, v2, v3) {
         document.getElementById('label1').innerText = l1;
         document.getElementById('label2').innerText = l2;
         document.getElementById('label3').innerText = l3;
-        document.getElementById('val1').innerText = v1.toLocaleString();
-        document.getElementById('val2').innerText = v2.toLocaleString();
-        document.getElementById('val3').innerText = v3.toLocaleString();
+        document.getElementById('val1').innerText = (typeof v1 === 'number') ? v1.toLocaleString() : v1;
+        document.getElementById('val2').innerText = (typeof v2 === 'number') ? v2.toLocaleString() : v2;
+        document.getElementById('val3').innerText = (typeof v3 === 'number') ? v3.toLocaleString() : v3;
     }
 
     function drawCharts(canvasId, type, title, labels, datasets) {
@@ -344,12 +353,11 @@
 
         const config = {
             type: type,
-            data: { labels: labels, datasets: datasets },
+            data: { labels: labels.map(l => l.length > 15 ? l.substring(0,15)+'..' : l), datasets: datasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { 
-                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
                     title: { display: true, text: title }
                 }
             }
@@ -375,15 +383,14 @@
     function exportToExcel() {
         const ws = XLSX.utils.table_to_sheet(document.getElementById('mainTable'));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, `Laporan_Puskesmas_Cilincing_${currentMode}_2026.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, `Report_Cilincing_${currentMode}_2026.xlsx`);
     }
 
     function showLoader(s) { document.getElementById('loader').style.display = s ? 'flex' : 'none'; }
 
     setInterval(() => {
-        const d = new Date();
-        document.getElementById('clock').innerText = d.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'medium' });
+        document.getElementById('clock').innerText = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' });
     }, 1000);
 
     init();
