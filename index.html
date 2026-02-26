@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthData | Puskesmas Cilincing</title>
+    <title>HealthData | Puskesmas Cilincing 2026</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,6 +17,7 @@
             --danger: #ef4444;
             --bg-light: #f8fafc;
             --sidebar: #1e293b;
+            --accent: #26ccca;
             --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
@@ -25,7 +26,7 @@
 
         /* Navbar */
         nav {
-            background: #26ccca;
+            background: var(--accent);
             padding: 0.75rem 2rem;
             display: flex;
             justify-content: space-between;
@@ -38,7 +39,7 @@
 
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-badge { background: var(--primary); color: white; padding: 5px 10px; border-radius: 8px; font-weight: 800; }
-        .logo-text { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
+        .logo-text { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; color: white; }
 
         .main-container {
             display: grid;
@@ -46,7 +47,7 @@
             min-height: calc(100vh - 60px);
         }
 
-        /* Sidebar / Filter Area */
+        /* Sidebar */
         .sidebar {
             background: white;
             border-right: 1px solid #e2e8f0;
@@ -57,9 +58,10 @@
         }
 
         .filter-section {
-            background: #26ccca;
+            background: var(--bg-light);
             padding: 1.5rem;
             border-radius: 12px;
+            border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -79,10 +81,8 @@
         }
         select:focus { border-color: var(--primary); }
 
-        /* Dashboard Content */
+        /* Stats & Cards */
         .content { padding: 2rem; overflow-y: auto; }
-        
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -101,7 +101,6 @@
         .stat-label { font-size: 0.875rem; color: var(--secondary); font-weight: 500; }
         .stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; }
 
-        /* Chart Layout */
         .charts-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -111,7 +110,7 @@
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); }
         .card-header { font-weight: 700; margin-bottom: 1.5rem; color: #334155; display: flex; justify-content: space-between; }
 
-        /* Table Style */
+        /* Table */
         .table-area { background: white; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: #f8fafc; }
@@ -123,23 +122,14 @@
         /* Buttons */
         .btn-group { display: flex; gap: 10px; margin-top: auto; }
         .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn-excel { background: #10b981; color: white; }
         .btn-print { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* Loading */
+        /* Loading Spinner */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.9); display: none;
@@ -151,15 +141,7 @@
 
         @media (max-width: 1024px) {
             .main-container { grid-template-columns: 1fr; }
-            .sidebar { border-right: none; border-bottom: 1px solid #e2e8f0; }
             .charts-wrapper { grid-template-columns: 1fr; }
-        }
-
-        @media print {
-            .sidebar, nav { display: none !important; }
-            .main-container { display: block; }
-            .content { padding: 0; }
-            .card { box-shadow: none; border: 1px solid #eee; }
         }
     </style>
 </head>
@@ -173,9 +155,9 @@
 <nav>
     <div class="logo-area">
         <div class="logo-badge">P</div>
-        <div class="logo-text">Puskesmas Cilincing <span style="font-weight: 300; color: var(--secondary);">Dashboard</span></div>
+        <div class="logo-text">Puskesmas Cilincing <span style="font-weight: 300; opacity: 0.8;">Dashboard 2026</span></div>
     </div>
-    <div id="currentInfo" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">DASHBOARDt</div>
+    <div id="currentInfo" style="font-size: 0.85rem; font-weight: 600; color: white;">LIVE DATA SYSTEM</div>
 </nav>
 
 <div class="main-container">
@@ -183,8 +165,9 @@
         <div class="filter-section">
             <div class="filter-group">
                 <label>Periode Tahun</label>
-                <select id="tahun" onchange="initLoad()">
-                    <option value="SEMUA">Semua Tahun (2023-2025)</option>
+                <select id="tahun" onchange="applyFilters()">
+                    <option value="SEMUA">Semua Tahun (2023-2026)</option>
+                    <option value="2026" selected>Tahun 2026</option>
                     <option value="2025">Tahun 2025</option>
                     <option value="2024">Tahun 2024</option>
                     <option value="2023">Tahun 2023</option>
@@ -192,8 +175,8 @@
             </div>
             <div class="filter-group">
                 <label>Bulan Operasional</label>
-                <select id="bulan" onchange="initLoad()">
-                    <option value="SEMUA">Akumulasi Setahun (Jan-Des)</option>
+                <select id="bulan" onchange="applyFilters()">
+                    <option value="SEMUA">Akumulasi Setahun</option>
                     <option value="JAN">Januari</option><option value="FEB">Februari</option>
                     <option value="MAR">Maret</option><option value="APR">April</option>
                     <option value="MEI">Mei</option><option value="JUN">Juni</option>
@@ -219,26 +202,26 @@
     <main class="content">
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Kunjungan Laki-laki</div>
+                <div class="stat-label">Kunjungan Laki-laki</div>
                 <div class="stat-value" id="valL">0</div>
             </div>
             <div class="stat-card pink">
-                <div class="stat-label">Total Kunjungan Perempuan</div>
+                <div class="stat-label">Kunjungan Perempuan</div>
                 <div class="stat-value" id="valP">0</div>
             </div>
             <div class="stat-card green">
-                <div class="stat-label">Akumulasi Pasien</div>
+                <div class="stat-label">Total Pasien</div>
                 <div class="stat-value" id="valT">0</div>
             </div>
         </div>
 
         <div class="charts-wrapper">
             <div class="card">
-                <div class="card-header">Distribusi Jenis Kelamin</div>
+                <div class="card-header">Distribusi Jenis Kelamin (Top 7)</div>
                 <div style="height: 280px;"><canvas id="barChart"></canvas></div>
             </div>
             <div class="card">
-                <div class="card-header">Tren Kunjungan Bulanan</div>
+                <div class="card-header">Tren Bulanan</div>
                 <div style="height: 280px;"><canvas id="lineChart"></canvas></div>
             </div>
         </div>
@@ -246,7 +229,7 @@
         <div class="card">
             <div class="card-header">
                 Detail Layanan Per Unit
-                <span id="tableTitle" style="font-size: 0.8rem; color: var(--secondary);">Menampilkan 0 data</span>
+                <span id="tableTitle" style="font-size: 0.8rem; color: var(--secondary);">Memuat data...</span>
             </div>
             <div class="table-area">
                 <table id="mainTable">
@@ -271,22 +254,24 @@
     let cachedData = {}; 
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const listBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
-    const listTahun = ['2023', '2024', '2025'];
+    const listTahun = ['2023', '2024', '2025', '2026'];
 
     async function initLoad() {
         const loader = document.getElementById('loader');
         loader.style.display = 'flex';
         
-        for (let b of listBulan) {
-            if (!cachedData[b]) {
+        try {
+            for (let b of listBulan) {
                 document.getElementById('loaderText').innerText = `Sinkronisasi Bulan ${b}...`;
                 cachedData[b] = await fetchAllTahunFromSheet(b);
             }
+            updatePoliDropdown();
+            applyFilters();
+        } catch (e) {
+            alert("Gagal memuat data dari Spreadsheet. Pastikan koneksi internet stabil.");
+        } finally {
+            loader.style.display = 'none';
         }
-
-        updatePoliDropdown();
-        applyFilters();
-        loader.style.display = 'none';
     }
 
     async function fetchAllTahunFromSheet(sheetName) {
@@ -297,14 +282,16 @@
             const rows = text.split('\n').map(r => r.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/"/g, '')));
             
             let dataMapping = {};
+            // Dimulai dari baris 14 (index 13)
             for (let i = 13; i < rows.length; i++) {
                 const r = rows[i];
-                if (r && r[1] && !r[1].includes("TOTAL") && r[1] !== "NAMA RUANGAN / POLI") {
+                if (r && r[1] && !r[1].includes("TOTAL") && r[1].trim() !== "") {
                     const poli = r[1].trim();
                     dataMapping[poli] = {
                         "2023": { l: parseInt(r[2])||0, p: parseInt(r[3])||0, t: parseInt(r[4])||0 },
                         "2024": { l: parseInt(r[5])||0, p: parseInt(r[6])||0, t: parseInt(r[7])||0 },
-                        "2025": { l: parseInt(r[8])||0, p: parseInt(r[9])||0, t: parseInt(r[10])||0 }
+                        "2025": { l: parseInt(r[8])||0, p: parseInt(r[9])||0, t: parseInt(r[10])||0 },
+                        "2026": { l: parseInt(r[11])||0, p: parseInt(r[12])||0, t: parseInt(r[13])||0 } // Kolom L, M, N
                     };
                 }
             }
@@ -317,14 +304,12 @@
         let allPoli = new Set();
         Object.values(cachedData).forEach(bulan => Object.keys(bulan).forEach(p => allPoli.add(p)));
         
-        const current = poliSelect.value;
         poliSelect.innerHTML = '<option value="SEMUA">Semua Layanan</option>';
         [...allPoli].sort().forEach(p => {
             const opt = document.createElement('option');
             opt.value = p; opt.innerText = p;
             poliSelect.appendChild(opt);
         });
-        poliSelect.value = current || "SEMUA";
     }
 
     function applyFilters() {
@@ -333,9 +318,12 @@
         const selPoli = document.getElementById('filterPoli').value;
 
         let tableData = [];
-        let poliList = (selPoli === "SEMUA") ? Object.keys(cachedData['JAN'] || {}) : [selPoli];
-
         let grandL = 0, grandP = 0, grandT = 0;
+
+        // Ambil daftar poli unik
+        let allPoliKeys = new Set();
+        Object.values(cachedData).forEach(db => Object.keys(db).forEach(k => allPoliKeys.add(k)));
+        let poliList = (selPoli === "SEMUA") ? Array.from(allPoliKeys) : [selPoli];
 
         poliList.forEach(namaPoli => {
             let sumL = 0, sumP = 0, sumT = 0;
@@ -358,15 +346,15 @@
             }
         });
 
-        // Update Stats View
         document.getElementById('valL').innerText = grandL.toLocaleString();
         document.getElementById('valP').innerText = grandP.toLocaleString();
         document.getElementById('valT').innerText = grandT.toLocaleString();
 
+        // Data untuk Grafik Tren Bulanan
         let lineValues = listBulan.map(b => {
             let val = 0;
             const targetTahun = (selThn === "SEMUA") ? listTahun : [selThn];
-            const activePoli = (selPoli === "SEMUA") ? Object.keys(cachedData[b] || {}) : [selPoli];
+            const activePoli = (selPoli === "SEMUA") ? Array.from(allPoliKeys) : [selPoli];
             activePoli.forEach(p => {
                 targetTahun.forEach(t => {
                     if (cachedData[b] && cachedData[b][p]) val += cachedData[b][p][t].t;
@@ -385,7 +373,7 @@
         document.getElementById('tableBody').innerHTML = tableData.map((d, i) => `
             <tr>
                 <td>${i+1}</td>
-                <td style="font-weight:600; color:#1e293b;">${d.nama}</td>
+                <td style="font-weight:600;">${d.nama}</td>
                 <td>${d.laki.toLocaleString()}</td>
                 <td>${d.peremp.toLocaleString()}</td>
                 <td><span class="badge-total">${d.total.toLocaleString()}</span></td>
@@ -414,10 +402,10 @@
             data: {
                 labels: listBulan,
                 datasets: [{
-                    label: 'Total Kunjungan',
+                    label: 'Kunjungan',
                     data: lineData,
                     borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
                     fill: true,
                     tension: 0.4,
                     pointRadius: 4
@@ -430,8 +418,8 @@
     function exportToExcel() {
         const ws = XLSX.utils.table_to_sheet(document.getElementById('mainTable'));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Rekap Pasien");
-        XLSX.writeFile(wb, `Rekap_Layanan_Puskesmas.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan 2026");
+        XLSX.writeFile(wb, `Rekap_Puskesmas_Cilincing_2026.xlsx`);
     }
 
     initLoad();
