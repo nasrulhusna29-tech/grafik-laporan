@@ -217,7 +217,7 @@
     }
 
     async function fetchCSV(id, sheet, skip) {
-        const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${sheet}`;
+        const url = `https://docs.google.com/spreadsheets/d/1TlY3wzoqnon0IBN7kKPhfhL9wxU7xfNsHjGtMjk639A/edit?usp=sharing`;
         const res = await fetch(url);
         const text = await res.text();
         return text.split('\n').map(row => 
