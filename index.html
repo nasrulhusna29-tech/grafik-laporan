@@ -34,8 +34,7 @@
         .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); border-left: 4px solid var(--primary); }
         .stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; }
 
-        .charts-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 2rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 2rem; }
         .card-header { font-weight: 700; margin-bottom: 1.5rem; color: #334155; }
 
         .table-area { background: white; border-radius: 12px; overflow-x: auto; box-shadow: var(--card-shadow); }
@@ -48,7 +47,7 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        @media (max-width: 1024px) { .main-container { grid-template-columns: 1fr; } .charts-wrapper { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) { .main-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -61,7 +60,7 @@
 <nav>
     <div style="display:flex; align-items:center;">
         <div class="logo-badge">P</div>
-        <div style="font-weight:700; font-size:1.2rem;">Puskesmas Cilincing Dashboard</div>
+        <div style="font-weight:700; font-size:1.2rem;">Dashboard Puskesmas Cilincing 2026</div>
     </div>
 </nav>
 
@@ -90,53 +89,43 @@
                     <option value="NOV">November</option><option value="DES">Desember</option>
                 </select>
             </div>
-            <div class="filter-group">
-                <label>Cari Poli</label>
-                <select id="filterPoli" onchange="applyFilters()">
-                    <option value="SEMUA">Semua Layanan</option>
-                </select>
-            </div>
         </div>
-        <button style="padding:12px; background:#10b981; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;" onclick="exportToExcel()">Unduh Excel</button>
+        <button style="padding:12px; background:#10b981; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;" onclick="exportToExcel()">Unduh Laporan Excel</button>
     </aside>
 
     <main class="content">
         <div class="stats-grid">
             <div class="stat-card">
-                <div style="color:var(--secondary); font-size:0.8rem;">LAKI-LAKI</div>
+                <div style="color:var(--secondary); font-size:0.8rem;">TOTAL LAKI-LAKI</div>
                 <div class="stat-value" id="valL">0</div>
             </div>
             <div class="stat-card" style="border-left-color:#ec4899;">
-                <div style="color:var(--secondary); font-size:0.8rem;">PEREMPUAN</div>
+                <div style="color:var(--secondary); font-size:0.8rem;">TOTAL PEREMPUAN</div>
                 <div class="stat-value" id="valP">0</div>
             </div>
             <div class="stat-card" style="border-left-color:var(--success);">
-                <div style="color:var(--secondary); font-size:0.8rem;">TOTAL KUNJUNGAN</div>
+                <div style="color:var(--secondary); font-size:0.8rem;">KUMULATIF KUNJUNGAN</div>
                 <div class="stat-value" id="valT">0</div>
             </div>
         </div>
 
-        <div class="charts-wrapper">
-            <div class="card">
-                <div class="card-header">Distribusi Per Variabel (Top 7 Poli)</div>
-                <div style="height:300px;"><canvas id="barChart"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-header">Tren Kunjungan Bulanan</div>
-                <div style="height:300px;"><canvas id="lineChart"></canvas></div>
+        <div class="card">
+            <div class="card-header">Grafik Kunjungan Seluruh Layanan (L, P, Total)</div>
+            <div id="barChartContainer" style="position: relative; height: 600px; width: 100%;">
+                <canvas id="barChart"></canvas>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">Detail Data Layanan</div>
+            <div class="card-header">Detail Rekapitulasi Data</div>
             <div class="table-area">
-                <table>
+                <table id="targetTable">
                     <thead>
                         <tr>
                             <th>No</th>
                             <th>Nama Ruangan / Poli</th>
-                            <th>L</th>
-                            <th>P</th>
+                            <th>Laki-laki</th>
+                            <th>Perempuan</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -148,7 +137,7 @@
 </div>
 
 <script>
-    let barChart, lineChart;
+    let barChart;
     let cachedData = {};
     const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
     const listBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
@@ -157,21 +146,22 @@
         document.getElementById('loader').style.display = 'flex';
         try {
             for (let b of listBulan) {
-                document.getElementById('loaderText').innerText = `Memuat Data Bulan ${b}...`;
+                document.getElementById('loaderText').innerText = `Sinkronisasi Bulan ${b}...`;
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${b}`;
                 const response = await fetch(url);
                 const csvText = await response.text();
                 
-                // Gunakan PapaParse untuk handling CSV yang mengandung koma di dalam teks (Poli)
-                const result = Papa.parse(csvText, { header: false });
+                // Parsing dengan PapaParse untuk akurasi Nama Poli
+                const result = Papa.parse(csvText, { header: false, skipEmptyLines: true });
                 const rows = result.data;
 
                 let dataMapping = {};
-                // Mulai baris ke-14 (Index 13) berdasarkan gambar user
+                // Mulai dari Index 13 (Baris 14 di Sheet)
                 for (let i = 13; i < rows.length; i++) {
                     const r = rows[i];
-                    if (r[1] && r[1].trim() !== "" && !r[1].includes("TOTAL")) {
-                        const namaPoli = r[1].trim();
+                    // Normalisasi nama: Trim spasi dan paksa Huruf Kapital agar konsisten
+                    if (r[1] && r[1].trim() !== "" && !r[1].toUpperCase().includes("TOTAL")) {
+                        const namaPoli = r[1].trim().toUpperCase(); 
                         dataMapping[namaPoli] = {
                             "2023": { l: parseInt(r[2])||0, p: parseInt(r[3])||0, t: parseInt(r[4])||0 },
                             "2024": { l: parseInt(r[5])||0, p: parseInt(r[6])||0, t: parseInt(r[7])||0 },
@@ -182,39 +172,26 @@
                 }
                 cachedData[b] = dataMapping;
             }
-            updatePoliDropdown();
             applyFilters();
         } catch (e) {
-            alert("Gagal sinkronisasi. Pastikan Spreadsheet dapat diakses publik.");
+            console.error(e);
+            alert("Terjadi kesalahan saat memuat data.");
         } finally {
             document.getElementById('loader').style.display = 'none';
         }
     }
 
-    function updatePoliDropdown() {
-        const select = document.getElementById('filterPoli');
-        let allPoli = new Set();
-        Object.values(cachedData).forEach(db => Object.keys(db).forEach(p => allPoli.add(p)));
-        [...allPoli].sort().forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p; opt.innerText = p;
-            select.appendChild(opt);
-        });
-    }
-
     function applyFilters() {
         const selThn = document.getElementById('tahun').value;
         const selBln = document.getElementById('bulan').value;
-        const selPoli = document.getElementById('filterPoli').value;
 
         let tableData = [];
-        let allPoliNames = new Set();
-        Object.values(cachedData).forEach(db => Object.keys(db).forEach(p => allPoliNames.add(p)));
+        let allUniquePoli = new Set();
+        Object.values(cachedData).forEach(db => Object.keys(db).forEach(p => allUniquePoli.add(p)));
         
-        let poliList = (selPoli === "SEMUA") ? Array.from(allPoliNames) : [selPoli];
         let gL = 0, gP = 0, gT = 0;
 
-        poliList.forEach(nama => {
+        allUniquePoli.forEach(nama => {
             let sL = 0, sP = 0, sT = 0;
             const targetBulan = (selBln === "SEMUA") ? listBulan : [selBln];
             const targetTahun = (selThn === "SEMUA") ? ["2023","2024","2025","2026"] : [selThn];
@@ -228,7 +205,8 @@
                     }
                 });
             });
-            if(sT > 0) {
+            
+            if(sT > 0) { // Hanya tampilkan yang ada datanya
                 tableData.push({ nama, l: sL, p: sP, t: sT });
                 gL += sL; gP += sP; gT += sT;
             }
@@ -239,10 +217,11 @@
         document.getElementById('valT').innerText = gT.toLocaleString();
 
         renderTable(tableData);
-        renderCharts(tableData, selThn, selPoli, allPoliNames);
+        renderBarChart(tableData);
     }
 
     function renderTable(data) {
+        // Urutkan berdasarkan total tertinggi untuk tabel agar rapi
         data.sort((a,b) => b.t - a.t);
         document.getElementById('tableBody').innerHTML = data.map((d, i) => `
             <tr>
@@ -255,65 +234,50 @@
         `).join('');
     }
 
-    function renderCharts(tableData, selThn, selPoli, allPoliNames) {
-        // --- BAR CHART ---
-        const ctxBar = document.getElementById('barChart').getContext('2d');
+    function renderBarChart(data) {
+        const ctx = document.getElementById('barChart').getContext('2d');
         if (barChart) barChart.destroy();
-        const top7 = [...tableData].sort((a,b) => b.t - a.t).slice(0, 7);
 
-        barChart = new Chart(ctxBar, {
-            type: 'bar',
+        // Urutkan data berdasarkan abjad agar Layanan Umum & Gigi mudah ditemukan
+        data.sort((a,b) => a.nama.localeCompare(b.nama));
+
+        // Sesuaikan tinggi container secara dinamis jika jumlah poli sangat banyak
+        const container = document.getElementById('barChartContainer');
+        if (data.length > 15) {
+            container.style.height = (data.length * 35) + "px";
+        } else {
+            container.style.height = "500px";
+        }
+
+        barChart = new Chart(ctx, {
+            type: 'bar', // Menggunakan bar horizontal agar label panjang tidak terpotong
             data: {
-                labels: top7.map(d => d.nama),
+                labels: data.map(d => d.nama),
                 datasets: [
-                    { label: 'Laki-laki', data: top7.map(d => d.l), backgroundColor: '#3b82f6' },
-                    { label: 'Perempuan', data: top7.map(d => d.p), backgroundColor: '#ec4899' },
-                    { label: 'Total', data: top7.map(d => d.t), backgroundColor: '#10b981' }
+                    { label: 'Laki-laki', data: data.map(d => d.l), backgroundColor: '#3b82f6' },
+                    { label: 'Perempuan', data: data.map(d => d.p), backgroundColor: '#ec4899' },
+                    { label: 'Total', data: data.map(d => d.t), backgroundColor: '#10b981' }
                 ]
             },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
-
-        // --- LINE CHART ---
-        const ctxLine = document.getElementById('lineChart').getContext('2d');
-        if (lineChart) lineChart.destroy();
-        
-        const activePoli = (selPoli === "SEMUA") ? Array.from(allPoliNames) : [selPoli];
-        const targetTahun = (selThn === "SEMUA") ? ["2023","2024","2025","2026"] : [selThn];
-
-        let lineLabels = listBulan;
-        let lineValuesT = listBulan.map(b => {
-            let sum = 0;
-            activePoli.forEach(p => targetTahun.forEach(t => { if(cachedData[b][p]) sum += cachedData[b][p][t].t; }));
-            return sum;
-        });
-
-        lineChart = new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                labels: lineLabels,
-                datasets: [{
-                    label: 'Total Kunjungan',
-                    data: lineValuesT,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
+            options: {
+                indexAxis: 'y', // Mengubah menjadi bar horizontal
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { beginAtZero: true, grid: { display: false } },
+                    y: { ticks: { font: { size: 10 } } }
+                }
             }
         });
     }
 
     function exportToExcel() {
-        const wb = XLSX.utils.table_to_book(document.querySelector("table"));
-        XLSX.writeFile(wb, "Rekap_Data_Puskesmas.xlsx");
+        const wb = XLSX.utils.table_to_book(document.getElementById('targetTable'));
+        XLSX.writeFile(wb, "Laporan_Kunjungan_Cilincing_2026.xlsx");
     }
 
     initLoad();
