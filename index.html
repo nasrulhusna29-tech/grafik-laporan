@@ -3,72 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puskesmas Cilincing - Dashboard 2026</title>
+    <title>Dashboard Puskesmas Cilincing 2026</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --primary: #2563eb; --pink: #ec4899; --green: #10b981; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; }
-        .header { background: #26ccca; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .grid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary); }
-        .stat-card p { margin: 5px 0 0; font-size: 1.8rem; font-weight: 700; }
-        #chart-container { position: relative; width: 100%; }
+        :root { --primary: #2563eb; --pink: #ec4899; --green: #10b981; --bg: #f3f4f6; --accent: #26ccca; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; padding: 0; color: #1f2937; }
+        
+        .navbar { background: var(--accent); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .grid-header { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .filter-box { display: flex; flex-direction: column; gap: 1rem; }
+        select, input { padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; width: 100%; font-size: 0.9rem; }
+        
+        .stats-wrapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .stat-card { background: white; padding: 1.2rem; border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-card h3 { margin: 0; font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+        .stat-card p { margin: 5px 0 0; font-size: 1.75rem; font-weight: 700; }
+
+        .chart-area { margin-top: 2rem; min-height: 400px; }
+        #chart-container { position: relative; width: 100%; transition: height 0.3s ease; }
+
+        .table-area { margin-top: 2rem; overflow-x: auto; background: white; border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; font-size: 0.8rem; color: #64748b; text-transform: uppercase; }
-        .loader { position: fixed; inset: 0; background: white; display: flex; justify-content: center; align-items: center; z-index: 100; flex-direction: column; }
+        th { background: #f9fafb; padding: 12px 15px; text-align: left; font-size: 0.75rem; color: #4b5563; text-transform: uppercase; border-bottom: 2px solid #f3f4f6; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+        tr:hover { background-color: #f9fafb; }
+        .badge-total { background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 6px; font-weight: 700; }
+
+        .loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) { .grid-header, .stats-wrapper { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div id="loader" class="loader">
-    <div style="border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
-    <p>Menghubungkan ke Spreadsheet...</p>
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; font-weight: 600;">Menarik Data Spreadsheet...</p>
+</div>
+
+<div class="navbar">
+    <div style="font-weight: 700; font-size: 1.2rem;">PUSKESMAS CILINCING</div>
+    <div id="currentDate" style="font-size: 0.85rem; opacity: 0.9;"></div>
 </div>
 
 <div class="container">
-    <div class="header">
-        <h1 style="margin:0; font-size: 1.5rem;">Puskesmas Kecamatan Cilincing</h1>
-        <p style="margin:5px 0 0; opacity: 0.8;">Dashboard Rekapitulasi Kunjungan Pasien 2026</p>
-    </div>
-
-    <div class="card">
-        <label><b>Pilih Bulan Data:</b></label>
-        <select id="bulanSelect" onchange="loadAndRender()" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-left: 10px;">
-            <option value="JAN">JANUARI</option>
-            <option value="FEB">FEBRUARI</option>
-            <option value="MAR">MARET</option>
-        </select>
-    </div>
-
-    <div class="grid-stats">
-        <div class="stat-card"><h3>LAKI-LAKI</h3><p id="totalL">0</p></div>
-        <div class="stat-card" style="border-left-color: var(--pink);"><h3>PEREMPUAN</h3><p id="totalP">0</p></div>
-        <div class="stat-card" style="border-left-color: var(--green);"><h3>TOTAL</h3><p id="totalT">0</p></div>
-    </div>
-
-    <div class="card">
-        <h3>Grafik Perbandingan Seluruh Layanan (2026)</h3>
-        <div id="chart-container">
-            <canvas id="mainChart"></canvas>
+    <div class="grid-header">
+        <div class="card filter-box">
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700;">PERIODE BULAN</label>
+                <select id="bulanSelect" onchange="fetchData()">
+                    <option value="JAN">Januari</option>
+                    <option value="FEB">Februari</option>
+                    <option value="MAR">Maret</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700;">CARI RUANGAN/POLI</label>
+                <input type="text" id="searchInput" placeholder="Ketik nama layanan..." onkeyup="filterData()">
+            </div>
+        </div>
+        
+        <div class="stats-wrapper">
+            <div class="stat-card">
+                <h3>Laki-Laki (2026)</h3>
+                <p id="statL">0</p>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--pink);">
+                <h3>Perempuan (2026)</h3>
+                <p id="statP">0</p>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--green);">
+                <h3>Total Kunjungan</h3>
+                <p id="statT">0</p>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <h3>Tabel Rincian Layanan</h3>
+    <div class="card chart-area">
+        <h3 style="margin-top:0; font-size: 1.1rem; color: #374151;">Grafik Kunjungan Seluruh Layanan</h3>
+        <div id="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-area">
         <table>
             <thead>
                 <tr>
-                    <th>Nama Ruangan / Poli</th>
-                    <th>Laki-laki</th>
-                    <th>Perempuan</th>
-                    <th>Jumlah</th>
+                    <th width="5%">No</th>
+                    <th width="45%">Nama Ruangan / Poli</th>
+                    <th width="15%">Laki-Laki</th>
+                    <th width="15%">Perempuan</th>
+                    <th width="20%">Total Jumlah</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -78,104 +115,119 @@
 
 <script>
     const SPREADSHEET_ID = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
-    let myChart = null;
+    let chartInstance = null;
+    let fullData = []; // Menyimpan data asli untuk pencarian
 
-    async function loadAndRender() {
+    async function fetchData() {
         const loader = document.getElementById('loader');
-        loader.style.display = 'flex';
-        
         const bulan = document.getElementById('bulanSelect').value;
-        // Menggunakan link export CSV dari Google Sheets
+        loader.style.display = 'flex';
+
+        // URL CSV Export Google Sheets
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${bulan}`;
 
         try {
             const response = await fetch(url);
             const csvText = await response.text();
             
-            // PapaParse digunakan untuk menghandle nama yang mengandung koma/tanda kurung
+            // Menggunakan PapaParse untuk menghandle karakter unik (seperti tanda kurung di poli)
             const results = Papa.parse(csvText, { header: false, skipEmptyLines: true });
-            const allRows = results.data;
+            const rows = results.data;
 
-            // Kita mulai ambil data dari baris ke-14 (indeks 13) sesuai file Excel Anda
-            // Baris ini biasanya berisi "LAYANAN UMUM"
-            const dataRows = allRows.slice(13).filter(row => {
-                return row[1] && row[1].trim() !== "" && !row[1].toUpperCase().includes("TOTAL");
-            });
+            // Berdasarkan file anda, data dimulai dari baris ke-14 (index 13)
+            // Kolom B (index 1) = Nama Poli
+            // Kolom L (index 11) = L 2026, M (index 12) = P 2026, N (index 13) = T 2026
+            fullData = rows.slice(13)
+                .filter(r => r[1] && r[1].trim() !== "" && !r[1].toUpperCase().includes("TOTAL"))
+                .map(r => ({
+                    nama: r[1].trim().toUpperCase(),
+                    l: parseInt(r[11]) || 0,
+                    p: parseInt(r[12]) || 0,
+                    t: parseInt(r[13]) || 0
+                }));
 
-            processData(dataRows);
-        } catch (err) {
-            alert("Gagal memuat data. Pastikan Spreadsheet sudah disetel ke PUBLIC.");
-            console.error(err);
+            filterData(); // Jalankan tampilan
+        } catch (error) {
+            console.error(error);
+            alert("Gagal mengambil data. Pastikan Spreadsheet disetel PUBLIC (Anyone with link).");
         } finally {
             loader.style.display = 'none';
         }
     }
 
-    function processData(rows) {
-        let labels = [], lData = [], pData = [], tData = [];
-        let grandL = 0, grandP = 0, grandT = 0;
-        let tableHtml = "";
+    function filterData() {
+        const searchTerm = document.getElementById('searchInput').value.toUpperCase();
+        
+        // Filter data berdasarkan input pencarian
+        const filtered = fullData.filter(d => d.nama.includes(searchTerm));
 
-        rows.forEach(row => {
-            const nama = row[1].trim().toUpperCase();
-            // Berdasarkan file Anda untuk Tahun 2026:
-            // Kolom L (index 11) = Laki-laki
-            // Kolom M (index 12) = Perempuan
-            // Kolom N (index 13) = Jumlah
-            const l = parseInt(row[11]) || 0;
-            const p = parseInt(row[12]) || 0;
-            const t = parseInt(row[13]) || 0;
+        // Update Statistik Atas
+        const totalL = filtered.reduce((sum, d) => sum + d.l, 0);
+        const totalP = filtered.reduce((sum, d) => sum + d.p, 0);
+        const totalT = filtered.reduce((sum, d) => sum + d.t, 0);
 
-            if (t > 0 || nama === "LAYANAN UMUM" || nama === "LAYANAN GIGI") {
-                labels.push(nama);
-                lData.push(l);
-                pData.push(p);
-                tData.push(t);
+        document.getElementById('statL').innerText = totalL.toLocaleString('id-ID');
+        document.getElementById('statP').innerText = totalP.toLocaleString('id-ID');
+        document.getElementById('statT').innerText = totalT.toLocaleString('id-ID');
 
-                grandL += l; grandP += p; grandT += t;
-                tableHtml += `<tr><td><b>${nama}</b></td><td>${l}</td><td>${p}</td><td><b>${t}</b></td></tr>`;
-            }
-        });
-
-        document.getElementById('totalL').innerText = grandL.toLocaleString();
-        document.getElementById('totalP').innerText = grandP.toLocaleString();
-        document.getElementById('totalT').innerText = grandT.toLocaleString();
-        document.getElementById('tableBody').innerHTML = tableHtml;
-
-        renderChart(labels, lData, pData, tData);
+        renderTable(filtered);
+        renderChart(filtered);
     }
 
-    function renderChart(labels, L, P, T) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (myChart) myChart.destroy();
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = data.map((d, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td style="font-weight: 600;">${d.nama}</td>
+                <td>${d.l.toLocaleString('id-ID')}</td>
+                <td>${d.p.toLocaleString('id-ID')}</td>
+                <td><span class="badge-total">${d.t.toLocaleString('id-ID')}</span></td>
+            </tr>
+        `).join('');
+    }
 
-        // Sesuaikan tinggi canvas agar semua poli (sekitar 27-30 poli) muat
-        document.getElementById('chart-container').style.height = (labels.length * 35) + "px";
+    function renderChart(data) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
 
-        myChart = new Chart(ctx, {
+        // Mengatur tinggi chart agar tidak berhimpitan jika datanya banyak
+        const chartContainer = document.getElementById('chart-container');
+        const dynamicHeight = Math.max(400, data.length * 35);
+        chartContainer.style.height = dynamicHeight + "px";
+
+        chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: data.map(d => d.nama),
                 datasets: [
-                    { label: 'Laki-laki', data: L, backgroundColor: '#3b82f6' },
-                    { label: 'Perempuan', data: P, backgroundColor: '#ec4899' },
-                    { label: 'Total', data: T, backgroundColor: '#10b981' }
+                    { label: 'Laki-Laki', data: data.map(d => d.l), backgroundColor: '#3b82f6' },
+                    { label: 'Perempuan', data: data.map(d => d.p), backgroundColor: '#ec4899' },
+                    { label: 'Total', data: data.map(d => d.t), backgroundColor: '#10b981' }
                 ]
             },
             options: {
-                indexAxis: 'y', // Bar horizontal agar nama poli terbaca jelas
+                indexAxis: 'y', // Bar Horizontal agar semua nama Poli terlihat
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'top' }
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                    y: { ticks: { font: { size: 10, weight: 'bold' } } }
                 }
             }
         });
     }
 
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    // Set tanggal hari ini
+    document.getElementById('currentDate').innerText = new Date().toLocaleDateString('id-ID', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
 
-    window.onload = loadAndRender;
+    window.onload = fetchData;
 </script>
 </body>
 </html>
