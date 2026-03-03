@@ -1,46 +1,133 @@
-<aside class="sidebar">
-    <div class="menu-section" style="margin-bottom: 20px;">
-        <label class="menu-label">Navigasi Utama</label>
-        <ul class="side-menu">
-            <li><a href="#" class="active"><span class="icon">📊</span> Data Kunjungan</a></li>
-            <li><a href="#"><span class="icon">📋</span> 10 Besar Penyakit</a></li>
-            <li>
-                <a href="https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l" target="_blank">
-                    <span class="icon">🔗</span> Buka Google Sheets
-                </a>
-            </li>
-        </ul>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puskesmas Cilincing 2026</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">Sinkronisasi Data...</div>
     </div>
 
-    <div class="filter-card">
-        <div class="filter-group">
-            <label>Pilih Tahun</label>
-            <select id="tahun" onchange="applyFilters()">
-                <option value="2026" selected>2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="SEMUA">Semua Tahun</option>
-            </select>
+    <nav>
+        <div class="nav-brand">
+            <div class="logo-badge">DASHBOARD</div>
+            <div class="brand-name">Puskesmas Cilincing</div>
         </div>
+    </nav>
+
+    <div class="main-layout">
         
-        <div class="filter-group">
-            <label>Pilih Bulan</label>
-            <select id="bulan" onchange="applyFilters()">
-                <option value="SEMUA">Semua Bulan</option>
-                <option value="JAN">Januari</option>
-                </select>
-        </div>
+        <aside class="sidebar">
+            
+            <div class="menu-section">
+                <label class="menu-label">Menu Utama</label>
+                <ul class="side-menu">
+                    <li><a href="#" class="active"><span class="icon">📊</span> Data Kunjungan</a></li>
+                    <li><a href="#"><span class="icon">📋</span> 10 Besar Penyakit</a></li>
+                    <li>
+                        <a href="https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l" target="_blank">
+                            <span class="icon">🔗</span> Buka Google Sheets
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-        <div class="filter-group">
-            <label>Cari Layanan/Poli</label>
-            <select id="filterPoli" onchange="applyFilters()">
-                <option value="SEMUA">Semua Layanan</option>
-            </select>
-        </div>
+            <div class="filter-card">
+                <div class="filter-group">
+                    <label>Pilih Tahun</label>
+                    <select id="tahun" onchange="applyFilters()">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="SEMUA">Semua Tahun</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Pilih Bulan</label>
+                    <select id="bulan" onchange="applyFilters()">
+                        <option value="SEMUA">Semua Bulan</option>
+                        <option value="JAN">Januari</option><option value="FEB">Februari</option>
+                        <option value="MAR">Maret</option><option value="APR">April</option>
+                        <option value="MEI">Mei</option><option value="JUN">Juni</option>
+                        <option value="JUL">Juli</option><option value="AGS">Agustus</option>
+                        <option value="SEP">September</option><option value="OKT">Oktober</option>
+                        <option value="NOV">November</option><option value="DES">Desember</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Cari Layanan/Poli</label>
+                    <select id="filterPoli" onchange="applyFilters()">
+                        <option value="SEMUA">Semua Layanan</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-download" onclick="exportToExcel()">
+                📥 Unduh Laporan (Excel)
+            </button>
+        </aside>
+
+        <main class="content">
+            <div class="stats-grid">
+                <div class="stat-card l-border">
+                    <span class="label">LAKI-LAKI</span>
+                    <div class="value" id="valL">0</div>
+                </div>
+                <div class="stat-card p-border">
+                    <span class="label">PEREMPUAN</span>
+                    <div class="value" id="valP">0</div>
+                </div>
+                <div class="stat-card total-border">
+                    <span class="label">TOTAL KUNJUNGAN</span>
+                    <div class="value" id="valT">0</div>
+                </div>
+            </div>
+
+            <div class="charts-wrapper">
+                <div class="card">
+                    <div class="card-header">Distribusi Top 7 Poli</div>
+                    <div class="chart-box"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Tren Kunjungan Bulanan</div>
+                    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Detail Data Layanan</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Ruangan / Poli</th>
+                                <th>L</th>
+                                <th>P</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <button class="btn-download" onclick="exportToExcel()">
-        Unduh Laporan (Excel)
-    </button>
-</aside>
+    <script src="script.js"></script>
+</body>
+</html>
