@@ -3,96 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Kunjungan 2023-2026</title>
+    <title>Puskesmas Cilincing 2026</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; background-color: #f4f7f6; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        canvas { width: 100% !important; height: 400px !important; }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <h2>Grafik Kunjungan Bulanan (2023 - 2026)</h2>
-    <canvas id="myChart"></canvas>
-    <p style="font-size: 12px; color: #666; text-align: center; margin-top: 20px;">
-        *Data diperbarui otomatis dari Google Sheets
-    </p>
-</div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">Sinkronisasi Data...</div>
+    </div>
 
-<script>
-    // GANTI LINK DI BAWAH INI DENGAN LINK CSV DARI GOOGLE SHEETS ANDA
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1v...link-anda.../pub?output=csv';
+    <nav>
+        <div class="nav-brand">
+            <div class="logo-badge">DASHBOARD</div>
+            <div class="brand-name">Puskesmas Cilincing</div>
+        </div>
+    </nav>
 
-    async function fetchData() {
-        const response = await fetch(CSV_URL);
-        const data = await response.text();
-        
-        // Sederhanakan: Di sini kita asumsikan data sudah siap di Sheet.
-        // Jika Anda ingin input manual di kode saja (lebih aman/cepat), gunakan data di bawah:
-        renderChart();
-    }
+    <div class="main-layout">
+        <aside class="sidebar">
+            <div class="filter-card">
+                <div class="filter-group">
+                    <label>Pilih Tahun</label>
+                    <select id="tahun" onchange="applyFilters()">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="SEMUA">Semua Tahun</option>
+                    </select>
+                </div>
 
-    function renderChart() {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const labels = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+                <div class="filter-group">
+                    <label>Pilih Bulan</label>
+                    <select id="bulan" onchange="applyFilters()">
+                        <option value="SEMUA">Semua Bulan</option>
+                        <option value="JAN">Januari</option><option value="FEB">Februari</option>
+                        <option value="MAR">Maret</option><option value="APR">April</option>
+                        <option value="MEI">Mei</option><option value="JUN">Juni</option>
+                        <option value="JUL">Juli</option><option value="AGS">Agustus</option>
+                        <option value="SEP">September</option><option value="OKT">Oktober</option>
+                        <option value="NOV">November</option><option value="DES">Desember</option>
+                    </select>
+                </div>
 
-        const myChart = new Chart(ctx, {
-            type: 'line', // Bisa diganti 'bar' jika suka grafik batang
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '2023',
-                        data: [120, 150, 180, 170, 200, 210, 250, 230, 220, 240, 260, 280], // Isi data Anda
-                        borderColor: '#3498db',
-                        backgroundColor: '#3498db',
-                        tension: 0.3,
-                        fill: false
-                    },
-                    {
-                        label: '2024',
-                        data: [130, 160, 190, 180, 210, 220, 260, 240, 230, 250, 270, 290],
-                        borderColor: '#e74c3c',
-                        backgroundColor: '#e74c3c',
-                        tension: 0.3,
-                        fill: false
-                    },
-                    {
-                        label: '2025',
-                        data: [140, 170, 200, 190, 220, 230, 270, 250, 240, 260, 280, 300],
-                        borderColor: '#2ecc71',
-                        backgroundColor: '#2ecc71',
-                        tension: 0.3,
-                        fill: false
-                    },
-                    {
-                        label: '2026',
-                        data: [160, 185], // Data berjalan (Jan-Feb 2026)
-                        borderColor: '#f1c40f',
-                        backgroundColor: '#f1c40f',
-                        tension: 0.3,
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' }
-                },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#eee' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    }
+                <div class="filter-group">
+                    <label>Cari Layanan/Poli</label>
+                    <select id="filterPoli" onchange="applyFilters()">
+                        <option value="SEMUA">Semua Layanan</option>
+                    </select>
+                </div>
+            </div>
 
-    renderChart();
-</script>
+            <button class="btn-download" onclick="exportToExcel()">
+                Unduh Laporan (Excel)
+            </button>
+        </aside>
 
+        <main class="content">
+            <div class="stats-grid">
+                <div class="stat-card l-border">
+                    <span class="label">LAKI-LAKI</span>
+                    <div class="value" id="valL">0</div>
+                </div>
+                <div class="stat-card p-border">
+                    <span class="label">PEREMPUAN</span>
+                    <div class="value" id="valP">0</div>
+                </div>
+                <div class="stat-card total-border">
+                    <span class="label">TOTAL KUNJUNGAN</span>
+                    <div class="value" id="valT">0</div>
+                </div>
+            </div>
+
+            <div class="charts-wrapper">
+                <div class="card">
+                    <div class="card-header">Distribusi Top 7 Poli</div>
+                    <div class="chart-box"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Tren Kunjungan Bulanan</div>
+                    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Detail Data Layanan</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Ruangan / Poli</th>
+                                <th>L</th>
+                                <th>P</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
