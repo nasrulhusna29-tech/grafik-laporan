@@ -20,15 +20,16 @@
     </div>
 
     <nav>
-        <div class="nav-brand">
+        <div class="nav-brand" style="display: flex; align-items: center;">
             <div class="logo-badge">DASHBOARD</div>
-            <div class="brand-name">Puskesmas Cilincing</div>
+            <div class="brand-name" style="font-weight: 700; font-size: 1.2rem;">Puskesmas Cilincing</div>
         </div>
     </nav>
 
-    <div class="main-layout">
+    <div class="main-container">
+        
         <aside class="sidebar">
-            <div class="filter-card">
+            <div class="filter-section">
                 <div class="filter-group">
                     <label>Pilih Tahun</label>
                     <select id="tahun" onchange="applyFilters()">
@@ -61,41 +62,55 @@
                 </div>
             </div>
 
+            <div class="menu-section">
+                <label class="menu-label">Navigasi Utama</label>
+                <ul class="side-menu">
+                    <li><a href="#" class="active"><span class="icon">📊</span> Ringkasan Data</a></li>
+                    <li><a href="#"><span class="icon">🏥</span> Profil Puskesmas</a></li>
+                    <li><a href="#"><span class="icon">📅</span> Jadwal Layanan</a></li>
+                    <li>
+                        <a href="https://docs.google.com/spreadsheets/d/1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l" target="_blank">
+                            <span class="icon">🔗</span> Sumber Data Sheets
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
             <button class="btn-download" onclick="exportToExcel()">
-                Unduh Laporan (Excel)
+                📥 Unduh Laporan (Excel)
             </button>
         </aside>
 
         <main class="content">
             <div class="stats-grid">
-                <div class="stat-card l-border">
-                    <span class="label">LAKI-LAKI</span>
-                    <div class="value" id="valL">0</div>
+                <div class="stat-card" style="border-left-color: #3b82f6;">
+                    <div style="font-size: 0.75rem; color: var(--secondary); font-weight: 700;">LAKI-LAKI</div>
+                    <div class="stat-value" id="valL">0</div>
                 </div>
-                <div class="stat-card p-border">
-                    <span class="label">PEREMPUAN</span>
-                    <div class="value" id="valP">0</div>
+                <div class="stat-card" style="border-left-color: #ec4899;">
+                    <div style="font-size: 0.75rem; color: var(--secondary); font-weight: 700;">PEREMPUAN</div>
+                    <div class="stat-value" id="valP">0</div>
                 </div>
-                <div class="stat-card total-border">
-                    <span class="label">TOTAL KUNJUNGAN</span>
-                    <div class="value" id="valT">0</div>
+                <div class="stat-card" style="border-left-color: #10b981;">
+                    <div style="font-size: 0.75rem; color: var(--secondary); font-weight: 700;">TOTAL KUNJUNGAN</div>
+                    <div class="stat-value" id="valT">0</div>
                 </div>
             </div>
 
             <div class="charts-wrapper">
                 <div class="card">
                     <div class="card-header">Distribusi Top 7 Poli</div>
-                    <div class="chart-box"><canvas id="barChart"></canvas></div>
+                    <div style="height: 300px;"><canvas id="barChart"></canvas></div>
                 </div>
                 <div class="card">
                     <div class="card-header">Tren Kunjungan Bulanan</div>
-                    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+                    <div style="height: 300px;"><canvas id="lineChart"></canvas></div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">Detail Data Layanan</div>
-                <div class="table-container">
+                <div class="table-area">
                     <table>
                         <thead>
                             <tr>
