@@ -8,53 +8,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
-        .hero-section { background: white; padding: 60px 0; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .hero-section { background: white; padding: 60px 0; border-bottom: 3px solid #0d6efd; }
         .card-menu { 
             transition: all 0.3s ease; 
             border: none; 
             border-radius: 15px; 
             height: 100%;
+            border-bottom: 4px solid #dee2e6;
         }
         .card-menu:hover { 
             transform: translateY(-10px); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; 
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15) !important; 
+            border-bottom: 4px solid #0d6efd;
         }
         .social-link {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 40px; height: 40px;
-            background: #e9ecef;
-            color: #198754;
+            background: #e7f1ff;
+            color: #0d6efd;
             border-radius: 50%;
             margin: 0 5px;
             transition: 0.3s;
         }
-        .social-link:hover { background: #198754; color: white; }
-        .video-card { border-radius: 15px; overflow: hidden; }
+        .social-link:hover { background: #0d6efd; color: white; }
+        .btn-blue { background-color: #0d6efd; color: white; }
+        .btn-blue:hover { background-color: #0a58ca; color: white; }
+        .text-blue { color: #0d6efd !important; }
     </style>
 </head>
 <body>
 
-    <header class="py-2 bg-light border-bottom">
+    <header class="py-2 bg-white border-bottom">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <img src="logo puskesmas.jpeg" alt="Logo" width="45" class="me-3">
+                <img src="logo_puskesmas.jpeg" alt="Logo" width="45" class="me-3">
                 <div>
-                    <h5 class="mb-0 fw-bold text-success">PUSKESMAS KECAMATAN CILINCING</h5>
+                    <h5 class="mb-0 fw-bold text-blue">PUSKESMAS KECAMATAN CILINCING</h5>
                     <small class="text-muted">Pusat Data & Informasi Kesehatan</small>
                 </div>
-            </div>
-            <div class="d-none d-md-block text-end">
-                <small class="text-muted"><i class="fas fa-map-marker-alt text-success me-1"></i> Jl. Sungai Landak No. 26, Cilincing, Jakarta Utara</small>
             </div>
         </div>
     </header>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">DASHBOARD UTAMA</a>
+            <a class="navbar-brand fw-bold" href="#">DASHBOARD DATA</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -71,78 +72,42 @@
     <section class="hero-section text-center">
         <div class="container">
             <h1 class="display-5 fw-bold text-dark">Pusat Data & Informasi</h1>
-            <p class="lead text-muted">Akses cepat layanan informasi kesehatan terpadu</p>
+            <p class="lead text-muted">Akses data kesehatan terintegrasi Puskesmas Cilincing</p>
         </div>
     </section>
 
-    <section class="container mb-5">
+    <section class="container my-5">
         <div class="row g-4">
             <div class="col-md-3">
                 <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                    <h4 class="text-primary">DHIS</h4>
-                    <p class="text-muted small">Data Kunjungan & 10 Besar Penyakit</p>
+                    <i class="fas fa-chart-pie fa-3x text-primary mb-3"></i>
+                    <h4 class="text-blue">DHIS</h4>
+                    <p class="text-muted small">Statistik Kunjungan Pasien</p>
                     <a href="dashboard_dhis.html" class="stretched-link"></a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-baby fa-3x text-info mb-3"></i>
-                    <h4 class="text-info">LAPORAN KIA</h4>
+                    <i class="fas fa-baby fa-3x text-primary mb-3"></i>
+                    <h4 class="text-blue">LAPORAN KIA</h4>
                     <p class="text-muted small">Kesehatan Ibu dan Anak</p>
                     <a href="https://taplink.cc/laporankesgakesprocil" target="_blank" class="stretched-link"></a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-calendar-check fa-3x text-warning mb-3"></i>
-                    <h4 class="text-warning">SI-UCIL</h4>
-                    <p class="text-muted small">Sistem Informasi UKM Cilincing</p>
+                    <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                    <h4 class="text-blue">SI-UCIL</h4>
+                    <p class="text-muted small">Sistem Informasi UKM</p>
                     <a href="https://s.id/SI-UCIL-Cilincing" target="_blank" class="stretched-link"></a>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-book-medical fa-3x text-success mb-3"></i>
-                    <h4 class="text-success">KUACI</h4>
-                    <p class="text-muted small">Kumpulan Buku Kesehatan Online</p>
+                    <i class="fas fa-book-medical fa-3x text-primary mb-3"></i>
+                    <h4 class="text-blue">KUACI</h4>
+                    <p class="text-muted small">E-Library Kesehatan</p>
                     <a href="https://kuaci-cilincing.com" target="_blank" class="stretched-link"></a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="lokasi" class="bg-white py-5">
-        <div class="container">
-            <h2 class="fw-bold text-center text-success mb-5">Media & Lokasi</h2>
-            <div class="row g-4">
-                <div class="col-lg-6">
-                    <div class="card video-card shadow-sm border-0 h-100">
-                        <div class="ratio ratio-16x9">
-                            <iframe src="https://www.youtube.com/embed/c3ap0xzP7Xw" title="Profil Puskesmas" allowfullscreen></iframe>
-                        </div>
-                        <div class="p-4">
-                            <h5>Edukasi Kesehatan</h5>
-                            <p class="text-muted small">Tonton video informasi kesehatan terbaru dari YouTube Resmi Kami.</p>
-                            <a href="https://www.youtube.com/@puskesmaskecamatancilincin7224" target="_blank" class="btn btn-danger btn-sm">
-                                <i class="fab fa-youtube me-1"></i> Buka Channel
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card video-card shadow-sm border-0 h-100">
-                        <div class="ratio ratio-16x9">
-                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3967.142548813735!2d106.914285!3d-6.111451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6a1ff66060c7f7%3A0xc6226c6292b0051!2sPuskesmas%20Kecamatan%20Cilincing!5e0!3m2!1sid!2sid!4v1700000000000" style="border:0;" allowfullscreen loading="lazy"></iframe>
-                        </div>
-                        <div class="p-4 text-center">
-                            <h5>Lokasi Strategis</h5>
-                            <p class="text-muted small">Jl. Sungai Landak No. 26, Cilincing, Jakarta Utara</p>
-                            <a href="https://maps.app.goo.gl/uXpXUa88Z22R4k3u9" target="_blank" class="btn btn-success btn-sm">
-                                <i class="fas fa-directions me-1"></i> Petunjuk Arah
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -150,18 +115,14 @@
 
     <footer class="py-5 bg-white border-top mt-5">
         <div class="container text-center">
-            <p class="fw-bold mb-1">Puskesmas Kecamatan Cilincing</p>
-            <p class="small text-muted mb-4">Melayani dengan hati untuk masyarakat yang sehat dan mandiri.</p>
             <div class="d-flex justify-content-center mb-4">
                 <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
                 <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
                 <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
             </div>
-            <hr>
             <p class="small text-muted">© 2026 Puskesmas Kecamatan Cilincing. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
