@@ -1,16 +1,26 @@
+/**
+ * DHIS Dashboard - Puskesmas Kecamatan Cilincing
+ * Theme: Blue Cyan Modern
+ */
+
 let barChart, lineChart;
 let cachedData = {};
 const spreadsheetId = '1PogbrbJAnjpP7NqogqrQbu8WkKs1g62l';
 const listBulan = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGS', 'SEP', 'OKT', 'NOV', 'DES'];
+const listTahun = ["2023", "2024", "2025", "2026"];
 
-// Inisialisasi Data
+// 1. Inisialisasi & Ambil Data dari Google Sheets
 async function initLoad() {
     const loader = document.getElementById('loader');
     const loaderText = document.getElementById('loaderText');
     
     try {
+        loader.style.display = 'flex';
+        
         for (let b of listBulan) {
-            loaderText.innerText = `Mengambil Data Bulan ${b}...`;
+            loaderText.innerText = `Mensinkronkan Data: ${b}...`;
+            
+            // Fetch data per sheet (per bulan)
             const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${b}`;
             const response = await fetch(url);
             const csvText = await response.text();
@@ -19,9 +29,10 @@ async function initLoad() {
             const rows = result.data;
 
             let dataMapping = {};
-            // Start parsing from meaningful rows (index 1+)
+            // Mulai loop dari baris data (index 1+)
             for (let i = 1; i < rows.length; i++) {
                 const r = rows[i];
+                // Pastikan kolom Nama Poli (index 1) tidak kosong
                 if (r[1] && r[1].trim() !== "" && !r[1].includes("TOTAL")) {
                     const namaPoli = r[1].trim();
                     dataMapping[namaPoli] = {
@@ -34,28 +45,38 @@ async function initLoad() {
             }
             cachedData[b] = dataMapping;
         }
+        
         updatePoliDropdown();
-        applyFilters();
+        applyFilters(); // Jalankan filter pertama kali (default)
+        
     } catch (e) {
-        console.error(e);
-        alert("Gagal sinkronisasi data. Pastikan Spreadsheet ID benar dan sudah di-'Publish to Web'.");
+        console.error("Error Loading Data:", e);
+        alert("Gagal memuat data. Pastikan Spreadsheet sudah di-set 'Public' dan 'Publish to Web'.");
     } finally {
         loader.style.display = 'none';
     }
 }
 
+// 2. Mengisi Dropdown Poli secara otomatis berdasarkan data yang ada
 function updatePoliDropdown() {
     const select = document.getElementById('filterPoli');
     let allPoli = new Set();
-    Object.values(cachedData).forEach(db => Object.keys(db).forEach(p => allPoli.add(p)));
     
+    // Ambil semua nama poli unik dari cache
+    Object.values(cachedData).forEach(db => {
+        Object.keys(db).forEach(p => allPoli.add(p));
+    });
+    
+    // Urutkan dan masukkan ke elemen select
     [...allPoli].sort().forEach(p => {
         const opt = document.createElement('option');
-        opt.value = p; opt.innerText = p;
+        opt.value = p; 
+        opt.innerText = p;
         select.appendChild(opt);
     });
 }
 
+// 3. Logika Filter (Tahun, Bulan, Poli)
 function applyFilters() {
     const selThn = document.getElementById('tahun').value;
     const selBln = document.getElementById('bulan').value;
@@ -65,20 +86,23 @@ function applyFilters() {
     let allPoliNames = new Set();
     Object.values(cachedData).forEach(db => Object.keys(db).forEach(p => allPoliNames.add(p)));
     
+    // Tentukan range filter
     let poliList = (selPoli === "SEMUA") ? Array.from(allPoliNames) : [selPoli];
+    const targetBulan = (selBln === "SEMUA") ? listBulan : [selBln];
+    const targetTahun = (selThn === "SEMUA") ? listTahun : [selThn];
+
     let gL = 0, gP = 0, gT = 0;
 
     poliList.forEach(nama => {
         let sL = 0, sP = 0, sT = 0;
-        const targetBulan = (selBln === "SEMUA") ? listBulan : [selBln];
-        const targetTahun = (selThn === "SEMUA") ? ["2023","2024","2025","2026"] : [selThn];
 
         targetBulan.forEach(b => {
             targetTahun.forEach(t => {
                 if(cachedData[b] && cachedData[b][nama]) {
-                    sL += cachedData[b][nama][t].l;
-                    sP += cachedData[b][nama][t].p;
-                    sT += cachedData[b][nama][t].t;
+                    const data = cachedData[b][nama][t];
+                    sL += data.l;
+                    sP += data.p;
+                    sT += data.t;
                 }
             });
         });
@@ -89,6 +113,7 @@ function applyFilters() {
         }
     });
 
+    // Update UI Statistik (Angka Utama)
     document.getElementById('valL').innerText = gL.toLocaleString('id-ID');
     document.getElementById('valP').innerText = gP.toLocaleString('id-ID');
     document.getElementById('valT').innerText = gT.toLocaleString('id-ID');
@@ -97,23 +122,28 @@ function applyFilters() {
     renderCharts(tableData, selThn, selPoli, allPoliNames);
 }
 
+// 4. Render Tabel Rincian
 function renderTable(data) {
-    data.sort((a,b) => b.t - a.t);
-    document.getElementById('tableBody').innerHTML = data.map((d, i) => `
+    data.sort((a,b) => b.t - a.t); // Urutkan dari kunjungan terbanyak
+    const tbody = document.getElementById('tableBody');
+    
+    tbody.innerHTML = data.map((d, i) => `
         <tr>
             <td>${i+1}</td>
-            <td style="font-weight:600; color: #334155;">${d.nama}</td>
+            <td style="font-weight:700; color: #003366;">${d.nama}</td>
             <td>${d.l.toLocaleString('id-ID')}</td>
             <td>${d.p.toLocaleString('id-ID')}</td>
-            <td><span class="badge-total">${d.t.toLocaleString('id-ID')}</span></td>
+            <td><span class="badge-blue">${d.t.toLocaleString('id-ID')}</span></td>
         </tr>
     `).join('');
 }
 
+// 5. Render Chart (Bar & Line) dengan Tema Blue Cyan
 function renderCharts(tableData, selThn, selPoli, allPoliNames) {
-    // Bar Chart
-    const ctxBar = document.getElementById('barChart');
+    // BAR CHART: Top 7 Layanan
+    const ctxBar = document.getElementById('barChart').getContext('2d');
     if (barChart) barChart.destroy();
+    
     const top7 = [...tableData].sort((a,b) => b.t - a.t).slice(0, 7);
 
     barChart = new Chart(ctxBar, {
@@ -121,19 +151,39 @@ function renderCharts(tableData, selThn, selPoli, allPoliNames) {
         data: {
             labels: top7.map(d => d.nama),
             datasets: [
-                { label: 'L', data: top7.map(d => d.l), backgroundColor: '#3b82f6', borderRadius: 5 },
-                { label: 'P', data: top7.map(d => d.p), backgroundColor: '#ec4899', borderRadius: 5 }
+                { 
+                    label: 'Laki-laki', 
+                    data: top7.map(d => d.l), 
+                    backgroundColor: '#0ea5e9', // Deep Cyan
+                    borderRadius: 6 
+                },
+                { 
+                    label: 'Perempuan', 
+                    data: top7.map(d => d.p), 
+                    backgroundColor: '#22d3ee', // Light Cyan
+                    borderRadius: 6 
+                }
             ]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Inter' } } } 
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
     });
 
-    // Line Chart
-    const ctxLine = document.getElementById('lineChart');
+    // LINE CHART: Tren Bulanan
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
     if (lineChart) lineChart.destroy();
     
     const activePoli = (selPoli === "SEMUA") ? Array.from(allPoliNames) : [selPoli];
-    const targetTahun = (selThn === "SEMUA") ? ["2023","2024","2025","2026"] : [selThn];
+    const targetTahun = (selThn === "SEMUA") ? listTahun : [selThn];
 
     const lineValues = listBulan.map(b => {
         let sum = 0;
@@ -150,22 +200,40 @@ function renderCharts(tableData, selThn, selPoli, allPoliNames) {
         data: {
             labels: listBulan,
             datasets: [{
-                label: 'Kunjungan',
+                label: 'Total Kunjungan',
                 data: lineValues,
-                borderColor: '#2563eb',
-                tension: 0.4,
+                borderColor: '#0891b2', // Cyan Dark
+                borderWidth: 3,
+                backgroundColor: 'rgba(34, 211, 238, 0.1)',
                 fill: true,
-                backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#0891b2'
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false } 
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
     });
 }
 
+// 6. Fungsi Export ke Excel
 function exportToExcel() {
     const table = document.querySelector("table");
     const wb = XLSX.utils.table_to_book(table);
-    XLSX.writeFile(wb, "Data_Kunjungan_Cilincing.xlsx");
+    const thn = document.getElementById('tahun').value;
+    const bln = document.getElementById('bulan').value;
+    
+    XLSX.writeFile(wb, `Laporan_DHIS_Cilincing_${thn}_${bln}.xlsx`);
 }
 
+// Jalankan Inisialisasi saat script dimuat
 initLoad();
