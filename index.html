@@ -1,128 +1,42 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pusat Data Puskesmas Cilincing</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-        .hero-section { background: white; padding: 60px 0; border-bottom: 3px solid #0d6efd; }
-        .card-menu { 
-            transition: all 0.3s ease; 
-            border: none; 
-            border-radius: 15px; 
-            height: 100%;
-            border-bottom: 4px solid #dee2e6;
-        }
-        .card-menu:hover { 
-            transform: translateY(-10px); 
-            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15) !important; 
-            border-bottom: 4px solid #0d6efd;
-        }
-        .social-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px; height: 40px;
-            background: #e7f1ff;
-            color: #0d6efd;
-            border-radius: 50%;
-            margin: 0 5px;
-            transition: 0.3s;
-        }
-        .social-link:hover { background: #0d6efd; color: white; }
-        .btn-blue { background-color: #0d6efd; color: white; }
-        .btn-blue:hover { background-color: #0a58ca; color: white; }
-        .text-blue { color: #0d6efd !important; }
-    </style>
-</head>
-<body>
+<style>
+    /* Tambahkan di dalam tag <style> index.html */
+    .btn-custom {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.3s;
+    }
 
-    <header class="py-2 bg-white border-bottom">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <img src="logo_puskesmas.jpeg" alt="Logo" width="45" class="me-3">
-                <div>
-                    <h5 class="mb-0 fw-bold text-blue">PUSKESMAS KECAMATAN CILINCING</h5>
-                    <small class="text-muted">Pusat Data & Informasi Kesehatan</small>
-                </div>
-            </div>
-        </div>
-    </header>
+    .btn-outline-blue {
+        border: 2px solid #0d6efd;
+        color: #0d6efd;
+        background: transparent;
+    }
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">DASHBOARD DATA</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="#">Beranda</a></li>
-                    <li class="nav-item"><a class="nav-link" href="dashboard_dhis.html">Data Kunjungan</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#lokasi">Media & Lokasi</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    .btn-outline-blue:hover {
+        background: #0d6efd;
+        color: white;
+    }
 
-    <section class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold text-dark">Pusat Data & Informasi</h1>
-            <p class="lead text-muted">Akses data kesehatan terintegrasi Puskesmas Cilincing</p>
-        </div>
-    </section>
+    .btn-full-blue {
+        background: #0d6efd;
+        color: white;
+    }
 
-    <section class="container my-5">
-        <div class="row g-4">
-            <div class="col-md-3">
-                <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-chart-pie fa-3x text-primary mb-3"></i>
-                    <h4 class="text-blue">DHIS</h4>
-                    <p class="text-muted small">Statistik Kunjungan Pasien</p>
-                    <a href="dashboard_dhis.html" class="stretched-link"></a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-baby fa-3x text-primary mb-3"></i>
-                    <h4 class="text-blue">LAPORAN KIA</h4>
-                    <p class="text-muted small">Kesehatan Ibu dan Anak</p>
-                    <a href="https://taplink.cc/laporankesgakesprocil" target="_blank" class="stretched-link"></a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
-                    <h4 class="text-blue">SI-UCIL</h4>
-                    <p class="text-muted small">Sistem Informasi UKM</p>
-                    <a href="https://s.id/SI-UCIL-Cilincing" target="_blank" class="stretched-link"></a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-menu shadow-sm p-4 text-center">
-                    <i class="fas fa-book-medical fa-3x text-primary mb-3"></i>
-                    <h4 class="text-blue">KUACI</h4>
-                    <p class="text-muted small">E-Library Kesehatan</p>
-                    <a href="https://kuaci-cilincing.com" target="_blank" class="stretched-link"></a>
-                </div>
-            </div>
-        </div>
-    </section>
+    .btn-full-blue:hover {
+        background: #004085;
+        transform: scale(1.02);
+    }
+</style>
 
-    <footer class="py-5 bg-white border-top mt-5">
-        <div class="container text-center">
-            <div class="d-flex justify-content-center mb-4">
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            <p class="small text-muted">© 2026 Puskesmas Kecamatan Cilincing. All Rights Reserved.</p>
-        </div>
-    </footer>
-
-</body>
-</html>
+<div class="p-4">
+    <h5 class="fw-bold">Edukasi Kesehatan</h5>
+    <p class="text-muted small">Tonton informasi kesehatan terbaru.</p>
+    <a href="URL_YOUTUBE" class="btn-custom btn-full-blue">
+        <i class="fab fa-youtube"></i> Buka Channel
+    </a>
+</div>
