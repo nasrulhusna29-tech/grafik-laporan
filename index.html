@@ -3,126 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puskesmas Cilincing 2026</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
+    <title>Pusat Data Puskesmas Cilincing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+        .hero-section { background: white; padding: 60px 0; }
+        .card-menu { 
+            transition: all 0.3s ease; 
+            border: none; 
+            border-radius: 15px; 
+            height: 100%;
+        }
+        .card-menu:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; 
+        }
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px; height: 40px;
+            background: #e9ecef;
+            color: #198754;
+            border-radius: 50%;
+            margin: 0 5px;
+            transition: 0.3s;
+        }
+        .social-link:hover { background: #198754; color: white; }
+        .video-card { border-radius: 15px; overflow: hidden; }
+    </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <div id="loaderText">Sinkronisasi Data...</div>
-    </div>
+    <header class="py-2 bg-light border-bottom">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <img src="logo_puskesmas.jpeg" alt="Logo" width="45" class="me-3">
+                <div>
+                    <h5 class="mb-0 fw-bold text-success">PUSKESMAS KECAMATAN CILINCING</h5>
+                    <small class="text-muted">Pusat Data & Informasi Kesehatan</small>
+                </div>
+            </div>
+            <div class="d-none d-md-block text-end">
+                <small class="text-muted"><i class="fas fa-map-marker-alt text-success me-1"></i> Jl. Sungai Landak No. 26, Cilincing, Jakarta Utara</small>
+            </div>
+        </div>
+    </header>
 
-    <nav>
-        <div class="nav-brand">
-            <div class="logo-badge">DASHBOARD</div>
-            <div class="brand-name">Puskesmas Cilincing</div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">DASHBOARD UTAMA</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Beranda</a></li>
+                    <li class="nav-item"><a class="nav-link" href="dashboard_dhis.html">Data Kunjungan</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#lokasi">Media & Lokasi</a></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="main-layout">
-        
-        <aside class="sidebar">
-            
-            <div class="menu-section">
-                <label class="menu-label">Menu Utama</label>
-                <ul class="side-menu">
-                    <li><a href="script.js" class="active"><span class="icon">📊</span> Data Kunjungan</a></li>
-                    <li><a href="#"><span class="icon">📋</span> 10 Besar Penyakit</a></li>
-                </ul>
-            </div>
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-dark">Pusat Data & Informasi</h1>
+            <p class="lead text-muted">Akses cepat layanan informasi kesehatan terpadu</p>
+        </div>
+    </section>
 
-    <div class="filter-card">
-                <div class="filter-group">
-                    <label>Pilih Tahun</label>
-                    <select id="tahun" onchange="applyFilters()">
-                        <option value="2026" selected>2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                        <option value="SEMUA">Semua Tahun</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Pilih Bulan</label>
-                    <select id="bulan" onchange="applyFilters()">
-                        <option value="SEMUA">Semua Bulan</option>
-                        <option value="JAN">Januari</option><option value="FEB">Februari</option>
-                        <option value="MAR">Maret</option><option value="APR">April</option>
-                        <option value="MEI">Mei</option><option value="JUN">Juni</option>
-                        <option value="JUL">Juli</option><option value="AGS">Agustus</option>
-                        <option value="SEP">September</option><option value="OKT">Oktober</option>
-                        <option value="NOV">November</option><option value="DES">Desember</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Cari Layanan/Poli</label>
-                    <select id="filterPoli" onchange="applyFilters()">
-                        <option value="SEMUA">Semua Layanan</option>
-                    </select>
+    <section class="container mb-5">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card card-menu shadow-sm p-4 text-center">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h4 class="text-primary">DHIS</h4>
+                    <p class="text-muted small">Data Kunjungan & 10 Besar Penyakit</p>
+                    <a href="dashboard_dhis.html" class="stretched-link"></a>
                 </div>
             </div>
-
-            <button class="btn-download" onclick="exportToExcel()">
-                📥 Unduh Laporan (Excel)
-            </button>
-        </aside>
- 
-        <main class="content">
-            <div class="stats-grid">
-                <div class="stat-card l-border">
-                    <span class="label">LAKI-LAKI</span>
-                    <div class="value" id="valL">0</div>
-                </div>
-                <div class="stat-card p-border">
-                    <span class="label">PEREMPUAN</span>
-                    <div class="value" id="valP">0</div>
-                </div>
-                <div class="stat-card total-border">
-                    <span class="label">TOTAL KUNJUNGAN</span>
-                    <div class="value" id="valT">0</div>
+            <div class="col-md-3">
+                <div class="card card-menu shadow-sm p-4 text-center">
+                    <i class="fas fa-baby fa-3x text-info mb-3"></i>
+                    <h4 class="text-info">LAPORAN KIA</h4>
+                    <p class="text-muted small">Kesehatan Ibu dan Anak</p>
+                    <a href="https://taplink.cc/laporankesgakesprocil" target="_blank" class="stretched-link"></a>
                 </div>
             </div>
-
-            <div class="charts-wrapper">
-                <div class="card">
-                    <div class="card-header">Distribusi Top 7 Poli</div>
-                    <div class="chart-box"><canvas id="barChart"></canvas></div>
-                </div>
-                <div class="card">
-                    <div class="card-header">Tren Kunjungan Bulanan</div>
-                    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+            <div class="col-md-3">
+                <div class="card card-menu shadow-sm p-4 text-center">
+                    <i class="fas fa-calendar-check fa-3x text-warning mb-3"></i>
+                    <h4 class="text-warning">SI-UCIL</h4>
+                    <p class="text-muted small">Sistem Informasi UKM Cilincing</p>
+                    <a href="https://s.id/SI-UCIL-Cilincing" target="_blank" class="stretched-link"></a>
                 </div>
             </div>
-
-            <div class="card">
-                <div class="card-header">Detail Data Layanan</div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Nama Ruangan / Poli</th>
-                                <th>L</th>
-                                <th>P</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
+            <div class="col-md-3">
+                <div class="card card-menu shadow-sm p-4 text-center">
+                    <i class="fas fa-book-medical fa-3x text-success mb-3"></i>
+                    <h4 class="text-success">KUACI</h4>
+                    <p class="text-muted small">Kumpulan Buku Kesehatan Online</p>
+                    <a href="https://kuaci-cilincing.com" target="_blank" class="stretched-link"></a>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </section>
 
-    <script src="script.js"></script>
+    <section id="lokasi" class="bg-white py-5">
+        <div class="container">
+            <h2 class="fw-bold text-center text-success mb-5">Media & Lokasi</h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card video-card shadow-sm border-0 h-100">
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.youtube.com/embed/c3ap0xzP7Xw" title="Profil Puskesmas" allowfullscreen></iframe>
+                        </div>
+                        <div class="p-4">
+                            <h5>Edukasi Kesehatan</h5>
+                            <p class="text-muted small">Tonton video informasi kesehatan terbaru dari YouTube Resmi Kami.</p>
+                            <a href="https://www.youtube.com/@puskesmaskecamatancilincin7224" target="_blank" class="btn btn-danger btn-sm">
+                                <i class="fab fa-youtube me-1"></i> Buka Channel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card video-card shadow-sm border-0 h-100">
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3967.142548813735!2d106.914285!3d-6.111451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6a1ff66060c7f7%3A0xc6226c6292b0051!2sPuskesmas%20Kecamatan%20Cilincing!5e0!3m2!1sid!2sid!4v1700000000000" style="border:0;" allowfullscreen loading="lazy"></iframe>
+                        </div>
+                        <div class="p-4 text-center">
+                            <h5>Lokasi Strategis</h5>
+                            <p class="text-muted small">Jl. Sungai Landak No. 26, Cilincing, Jakarta Utara</p>
+                            <a href="https://maps.app.goo.gl/uXpXUa88Z22R4k3u9" target="_blank" class="btn btn-success btn-sm">
+                                <i class="fas fa-directions me-1"></i> Petunjuk Arah
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5 bg-white border-top mt-5">
+        <div class="container text-center">
+            <p class="fw-bold mb-1">Puskesmas Kecamatan Cilincing</p>
+            <p class="small text-muted mb-4">Melayani dengan hati untuk masyarakat yang sehat dan mandiri.</p>
+            <div class="d-flex justify-content-center mb-4">
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+            </div>
+            <hr>
+            <p class="small text-muted">© 2026 Puskesmas Kecamatan Cilincing. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
