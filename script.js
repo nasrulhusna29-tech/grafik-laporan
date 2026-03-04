@@ -18,7 +18,7 @@ async function initLoad() {
 
             let dataMapping = {};
             // Pengambilan data dimulai dari baris ke-14 (indeks 13)
-            for (let i = 13; i < rows.length; i++) {
+            for (let i = 10; i < rows.length; i++) {
                 const r = rows[i];
                 if (r[1] && r[1].trim() !== "" && !r[1].includes("TOTAL")) {
                     const namaPoli = r[1].trim();
